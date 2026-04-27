@@ -32,11 +32,18 @@
 
   /* Standard selector */
   .std-selector { display:flex; gap:10px; margin-bottom:4px; }
-  .std-btn { flex:1; padding:14px 12px; border:2px solid var(--border); border-radius:10px; cursor:pointer; font-family:'Heebo',sans-serif; font-size:13px; font-weight:600; background:white; color:var(--text); transition:all 0.15s; text-align:center; }
+  .std-btn { flex:1; padding:14px 12px; border:2px solid var(--border); border-radius:10px; cursor:pointer; font-family:'Heebo',sans-serif; font-size:13px; font-weight:600; background:white; color:var(--text); transition:all 0.15s; text-align:center; display:block; user-select:none; }
   .std-btn .std-icon { font-size:24px; display:block; margin-bottom:4px; }
-  .std-btn .std-year { font-size:11px; color:var(--text-light); }
+  .std-btn .std-year { font-size:11px; color:var(--text-light); display:block; }
   .std-btn.selected { border-color:var(--primary); background:#f0f6ff; color:var(--primary); }
   .std-btn.selected .std-year { color:var(--primary-light); }
+
+  /* Multi-std section headers in eq grid */
+  .eq-section-header { font-size:13px; font-weight:700; padding:8px 12px; border-radius:8px 8px 0 0; margin-bottom:8px; display:flex; align-items:center; gap:6px; margin-top:14px; }
+  .eq-section-header:first-child { margin-top:0; }
+  .new-std-header { background:#e8f4fd; color:#1a3a5c; border:1.5px solid #b8d9f5; }
+  .old-std-header { background:#fdf6e8; color:#5a3800; border:1.5px solid #f5ddb8; }
+  .fit-std-header { background:#eafaf1; color:#1a5c3a; border:1.5px solid #b8f5d0; }
 
   /* Inspection type selector */
   .insp-type-grid { display:flex; flex-wrap:wrap; gap:6px; }
@@ -185,12 +192,10 @@
   /* Inspection type banner */
   .insp-type-banner { background:#f0f6ff; border:1.5px solid var(--primary-light); border-radius:8px; padding:8px 12px; margin-bottom:14px; font-size:12px; color:var(--primary); font-weight:600; display:flex; align-items:center; gap:6px; }
 
+  /* old mixed layout remnants — kept for compat */
   .mixed-columns { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   @media (max-width:700px) { .mixed-columns { grid-template-columns:1fr; } }
   .mixed-col {}
-  .mixed-col-header { font-size:13px; font-weight:700; padding:8px 12px; border-radius:8px 8px 0 0; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
-  .new-std-header { background:#e8f4fd; color:#1a3a5c; border:1.5px solid #b8d9f5; }
-  .old-std-header { background:#fdf4e8; color:#7a4a0a; border:1.5px solid #f5d5b8; }
   @media print {
     .form-topbar, .tabs-bar { display:none !important; }
     .tab-content { display:block !important; padding:8px; }
@@ -212,23 +217,26 @@
   </div>
 
   <div class="setup-card">
-    <h2>📋 בחר מהדורת תקן</h2>
+    <h2>📋 בחר תקנים (ניתן לבחור יותר מאחד)</h2>
     <div class="std-selector">
-      <button class="std-btn" id="std_new" onclick="selectStd('new')">
+      <label class="std-btn" id="std_new_label">
+        <input type="checkbox" id="std_new" onchange="onStdChange()" style="display:none">
         <span class="std-icon">🆕</span>
-        תקן חדש
-        <span class="std-year">2006 ואילך</span>
-      </button>
-      <button class="std-btn" id="std_old" onclick="selectStd('old')">
+        ת"י 1498 לאחר 2006
+        <span class="std-year">תקן חדש</span>
+      </label>
+      <label class="std-btn" id="std_old_label">
+        <input type="checkbox" id="std_old" onchange="onStdChange()" style="display:none">
         <span class="std-icon">📜</span>
-        תקן ישן
-        <span class="std-year">לפני 2006</span>
-      </button>
-      <button class="std-btn" id="std_mixed" onclick="selectStd('mixed')">
-        <span class="std-icon">🔀</span>
-        שילוב תקנים
-        <span class="std-year">חדש + ישן באותו אתר</span>
-      </button>
+        ת"י 1498 לפני 2006
+        <span class="std-year">תקן ישן</span>
+      </label>
+      <label class="std-btn" id="std_fitness_label">
+        <input type="checkbox" id="std_fitness" onchange="onStdChange()" style="display:none">
+        <span class="std-icon">💪</span>
+        ת"י 1497 כושר
+        <span class="std-year">מתקני ספורט</span>
+      </label>
     </div>
   </div>
 
@@ -260,26 +268,8 @@
 
   <div class="setup-card" id="eq-setup-card">
     <h2 id="eq-card-title">סוגי מתקנים באתר — הגדר כמות לכל סוג</h2>
-    <!-- Single standard layout -->
-    <div id="eq-single-layout">
-      <div class="eq-grid" id="eq-grid"></div>
-    </div>
-    <!-- Mixed standard layout -->
-    <div id="eq-mixed-layout" style="display:none">
-      <div class="mixed-columns">
-        <div class="mixed-col">
-          <div class="mixed-col-header new-std-header">
-            <span>🆕</span> מתקנים לפי תקן חדש (2006+)
-          </div>
-          <div class="eq-grid" id="eq-grid-new"></div>
-        </div>
-        <div class="mixed-col">
-          <div class="mixed-col-header old-std-header">
-            <span>📜</span> מתקנים לפי תקן ישן (לפני 2006)
-          </div>
-          <div class="eq-grid" id="eq-grid-old"></div>
-        </div>
-      </div>
+    <div id="eq-grid-container">
+      <!-- built dynamically by buildSetupGrid() -->
     </div>
   </div>
 
@@ -312,22 +302,131 @@ const OLD_STD_EXTRAS = [{"topic": "בחינת תפקוד קודמת ממעבדה
 
 const OLD_STD_CHECKLISTS = {"old_combined": [{"type": "subheader", "text": "בדיקות כלליות — חלק 1, חלק 4 טבלה 2"}, {"type": "item", "num": "א", "topic": "גובה נפילה", "subtopic": "גובה נפילה מהמתקן לקרקע (מגובה הרגלים)", "chapter": "1", "section": "8.1"}, {"type": "item", "num": "ב", "topic": "סכנת היחתכות / היצבטות", "subtopic": "בדיקה בכל חלקי המתקן", "chapter": "2", "section": "8.3"}, {"type": "item", "num": "ג", "topic": "הילכדות ראש", "subtopic": "ראש בחללים סגורים (כולל עיגול); ראש בחללים פתוחים למחצה + מרווחי V", "chapter": "2", "section": "8.4"}, {"type": "item", "num": "ד", "topic": "הילכדות אצבע / כף רגל", "subtopic": "אצבע (כולל במתקנים נעים); חריצים פתוחים + מרווחי V; כף רגל (כולל בחלקים נעים)", "chapter": "2", "section": "8.4"}, {"type": "subheader", "text": "מצב המתקן — מבנה וגימור"}, {"type": "item", "num": "ה", "topic": "מבנה", "subtopic": "כפיפות, עיוותים, עיקולים, סדקים, שברים וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ו", "topic": "גימור פני השטח", "subtopic": "חוסר ציפוי מגן, חלודה או שיתוך אחר, סדקים או חריצים בציפוי", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ז", "topic": "אמצעי חיבור", "subtopic": "העדר אמצעי חיבור, התרופפות, סגירה, העדר אמצעי אבטחה מפני התרופפות, העדר כיסויים, בליטות וקצוות חדים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ח", "topic": "קצוות", "subtopic": "בליטות, נקודות חדות או קצוות חדים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ט", "topic": "חלקים נעים", "subtopic": "שחיקת המסבים, העדר חומר סיכה במסבים, פגם תנועה (חופש יתר / היתפסות), רעש מופרז, חוסר מכסים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "י", "topic": "מעקי יד", "subtopic": "העדר מעקי יד, כיפופים, שברים, התרופפות וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "יא", "topic": "אמצעי עלייה", "subtopic": "מדרגות או שלבים חסרים, שבורים או רופפים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "יב", "topic": "יסודות", "subtopic": "סדקים, שברים, חופש בין יסוד לקרקע, בליטת היסוד מעל הקרקע", "chapter": "4", "section": "טבלה 2"}, {"type": "subheader", "text": "חומרים ותחזוקה"}, {"type": "item", "num": "יג", "topic": "כיסוי המשטחים", "subtopic": "העדר כיסוי, תזוזה של הכיסוי, כיסוי שגודלו אינו מספיק, ניקיון הכיסוי לפי הצורך", "chapter": "1–2", "section": "4.2.8.4–4.10"}, {"type": "item", "num": "יד", "topic": "פריטים מתכלים", "subtopic": "העדר פריטים, כיפופים, שחיקה, שברים, התרופפות, אונקלים פתוחים וכו׳", "chapter": "1", "section": "4.2.11"}, {"type": "item", "num": "טו", "topic": "חלקים עשויים עץ", "subtopic": "ריקבון, התקפת חרקים, סדקים מסוכנים", "chapter": "1", "section": "4.1.3"}, {"type": "item", "num": "טז", "topic": "חבלים (אם קיימים)", "subtopic": "השחתה, השפעת קרינה על סגולית, שחיקה", "chapter": "1", "section": "4.2.12"}, {"type": "item", "num": "יז", "topic": "תחזוקה", "subtopic": "בדיקת ציפוי חלקי המתכת (בצבע או ציפוי תקני אחר); בדיקת טיפול במשטחי עץ שלא חוסנו נגד מזיקים", "chapter": "4", "section": "5.2–5.2.2"}, {"type": "notes"}, {"type": "subheader", "text": "בדיקות ספציפיות — מתקן משולב / מגדל משחק"}, {"type": "item", "num": "א1", "topic": "מעקים", "subtopic": "גובה מעקה בהתאם לגובה נפילה; מבנה המעקה (בחלל שבין משטח ההליכה לבין קורת האחיזה העליונה)", "chapter": "2", "section": "8.7.2–8.7.3"}, {"type": "item", "num": "א2", "topic": "גובה נפילה ממגדלים", "subtopic": "גובה משטחי הדריכה של המגדלים; גובה נפילה של משטחי הליכה בגשרים מכל הסוגים; גובה נפילה ממתקני טיפוס למיניהם", "chapter": "1", "section": "8.1"}, {"type": "notes"}], "old_swing": [{"type": "subheader", "text": "בדיקות כלליות — חלק 1, חלק 4 טבלה 2"}, {"type": "item", "num": "א", "topic": "גובה נפילה", "subtopic": "גובה נפילה מהמתקן לקרקע (מגובה הרגלים)", "chapter": "1", "section": "8.1"}, {"type": "item", "num": "ב", "topic": "סכנת היחתכות / היצבטות", "subtopic": "בדיקה בכל חלקי המתקן", "chapter": "2", "section": "8.3"}, {"type": "item", "num": "ג", "topic": "הילכדות ראש", "subtopic": "ראש בחללים סגורים (כולל עיגול); ראש בחללים פתוחים למחצה + מרווחי V", "chapter": "2", "section": "8.4"}, {"type": "item", "num": "ד", "topic": "הילכדות אצבע / כף רגל", "subtopic": "אצבע (כולל במתקנים נעים); חריצים פתוחים + מרווחי V; כף רגל (כולל בחלקים נעים)", "chapter": "2", "section": "8.4"}, {"type": "subheader", "text": "מצב המתקן — מבנה וגימור"}, {"type": "item", "num": "ה", "topic": "מבנה", "subtopic": "כפיפות, עיוותים, עיקולים, סדקים, שברים וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ו", "topic": "גימור פני השטח", "subtopic": "חוסר ציפוי מגן, חלודה או שיתוך אחר, סדקים או חריצים בציפוי", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ז", "topic": "אמצעי חיבור", "subtopic": "העדר אמצעי חיבור, התרופפות, סגירה, העדר אמצעי אבטחה מפני התרופפות, העדר כיסויים, בליטות וקצוות חדים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ח", "topic": "קצוות", "subtopic": "בליטות, נקודות חדות או קצוות חדים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ט", "topic": "חלקים נעים", "subtopic": "שחיקת המסבים, העדר חומר סיכה במסבים, פגם תנועה (חופש יתר / היתפסות), רעש מופרז, חוסר מכסים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "י", "topic": "מעקי יד", "subtopic": "העדר מעקי יד, כיפופים, שברים, התרופפות וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "יא", "topic": "אמצעי עלייה", "subtopic": "מדרגות או שלבים חסרים, שבורים או רופפים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "יב", "topic": "יסודות", "subtopic": "סדקים, שברים, חופש בין יסוד לקרקע, בליטת היסוד מעל הקרקע", "chapter": "4", "section": "טבלה 2"}, {"type": "subheader", "text": "חומרים ותחזוקה"}, {"type": "item", "num": "יג", "topic": "כיסוי המשטחים", "subtopic": "העדר כיסוי, תזוזה של הכיסוי, כיסוי שגודלו אינו מספיק, ניקיון הכיסוי לפי הצורך", "chapter": "1–2", "section": "4.2.8.4–4.10"}, {"type": "item", "num": "יד", "topic": "פריטים מתכלים", "subtopic": "העדר פריטים, כיפופים, שחיקה, שברים, התרופפות, אונקלים פתוחים וכו׳", "chapter": "1", "section": "4.2.11"}, {"type": "item", "num": "טו", "topic": "חלקים עשויים עץ", "subtopic": "ריקבון, התקפת חרקים, סדקים מסוכנים", "chapter": "1", "section": "4.1.3"}, {"type": "item", "num": "טז", "topic": "חבלים (אם קיימים)", "subtopic": "השחתה, השפעת קרינה על סגולית, שחיקה", "chapter": "1", "section": "4.2.12"}, {"type": "item", "num": "יז", "topic": "תחזוקה", "subtopic": "בדיקת ציפוי חלקי המתכת (בצבע או ציפוי תקני אחר); בדיקת טיפול במשטחי עץ שלא חוסנו נגד מזיקים", "chapter": "4", "section": "5.2–5.2.2"}, {"type": "notes"}, {"type": "subheader", "text": "בדיקות ספציפיות — נדנדות תלויות"}, {"type": "item", "num": "א1", "topic": "שרשראות תלייה", "subtopic": "סדקים, סימני שיתוך, נקודות חדות, התרופפות בחיבורים ושחיקה", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "א2", "topic": "כבלי תלייה", "subtopic": "תקינים בהתאם לתקן הישראלי ת״י 1202; מתיחת הכבל בהתאם להוראות היצרן המתקין", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "א3", "topic": "מושבים", "subtopic": "העדר מושבים, התרופפות בחיבורים ושחיקה, מושבים פגומים, פינות חדות וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "א4", "topic": "מרווח תחתון (h₂)", "subtopic": "מרחק בין המושבים לרגלי החצובה עליה מותקנים המושבים; גובה המושבים מהקרקע (מכלול תחתון ועליון של המושבים)", "chapter": "2", "section": "4.2–4.4"}, {"type": "item", "num": "א5", "topic": "מרווח בין מושבים", "subtopic": "מרחק בין המושבים; ממדי אזור ההולם", "chapter": "2", "section": "4.5"}, {"type": "item", "num": "א6", "topic": "יציבות מושבים ואמצעי תילוי", "subtopic": "יציבות מושבי נדנדה; אמצעי התילוי של המושבים; חלוקה לאגפים (יותר מ-2 מושבים)", "chapter": "2", "section": "4.9"}, {"type": "notes"}], "old_slide": [{"type": "subheader", "text": "בדיקות כלליות — חלק 1, חלק 4 טבלה 2"}, {"type": "item", "num": "א", "topic": "גובה נפילה", "subtopic": "גובה נפילה מהמתקן לקרקע (מגובה הרגלים)", "chapter": "1", "section": "8.1"}, {"type": "item", "num": "ב", "topic": "סכנת היחתכות / היצבטות", "subtopic": "בדיקה בכל חלקי המתקן", "chapter": "2", "section": "8.3"}, {"type": "item", "num": "ג", "topic": "הילכדות ראש", "subtopic": "ראש בחללים סגורים (כולל עיגול); ראש בחללים פתוחים למחצה + מרווחי V", "chapter": "2", "section": "8.4"}, {"type": "item", "num": "ד", "topic": "הילכדות אצבע / כף רגל", "subtopic": "אצבע (כולל במתקנים נעים); חריצים פתוחים + מרווחי V; כף רגל (כולל בחלקים נעים)", "chapter": "2", "section": "8.4"}, {"type": "subheader", "text": "מצב המתקן — מבנה וגימור"}, {"type": "item", "num": "ה", "topic": "מבנה", "subtopic": "כפיפות, עיוותים, עיקולים, סדקים, שברים וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ו", "topic": "גימור פני השטח", "subtopic": "חוסר ציפוי מגן, חלודה או שיתוך אחר, סדקים או חריצים בציפוי", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ז", "topic": "אמצעי חיבור", "subtopic": "העדר אמצעי חיבור, התרופפות, סגירה, העדר אמצעי אבטחה מפני התרופפות, העדר כיסויים, בליטות וקצוות חדים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ח", "topic": "קצוות", "subtopic": "בליטות, נקודות חדות או קצוות חדים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ט", "topic": "חלקים נעים", "subtopic": "שחיקת המסבים, העדר חומר סיכה במסבים, פגם תנועה (חופש יתר / היתפסות), רעש מופרז, חוסר מכסים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "י", "topic": "מעקי יד", "subtopic": "העדר מעקי יד, כיפופים, שברים, התרופפות וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "יא", "topic": "אמצעי עלייה", "subtopic": "מדרגות או שלבים חסרים, שבורים או רופפים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "יב", "topic": "יסודות", "subtopic": "סדקים, שברים, חופש בין יסוד לקרקע, בליטת היסוד מעל הקרקע", "chapter": "4", "section": "טבלה 2"}, {"type": "subheader", "text": "חומרים ותחזוקה"}, {"type": "item", "num": "יג", "topic": "כיסוי המשטחים", "subtopic": "העדר כיסוי, תזוזה של הכיסוי, כיסוי שגודלו אינו מספיק, ניקיון הכיסוי לפי הצורך", "chapter": "1–2", "section": "4.2.8.4–4.10"}, {"type": "item", "num": "יד", "topic": "פריטים מתכלים", "subtopic": "העדר פריטים, כיפופים, שחיקה, שברים, התרופפות, אונקלים פתוחים וכו׳", "chapter": "1", "section": "4.2.11"}, {"type": "item", "num": "טו", "topic": "חלקים עשויים עץ", "subtopic": "ריקבון, התקפת חרקים, סדקים מסוכנים", "chapter": "1", "section": "4.1.3"}, {"type": "item", "num": "טז", "topic": "חבלים (אם קיימים)", "subtopic": "השחתה, השפעת קרינה על סגולית, שחיקה", "chapter": "1", "section": "4.2.12"}, {"type": "item", "num": "יז", "topic": "תחזוקה", "subtopic": "בדיקת ציפוי חלקי המתכת (בצבע או ציפוי תקני אחר); בדיקת טיפול במשטחי עץ שלא חוסנו נגד מזיקים", "chapter": "4", "section": "5.2–5.2.2"}, {"type": "notes"}, {"type": "subheader", "text": "בדיקות ספציפיות — מגלשות"}, {"type": "item", "num": "א1", "topic": "זווית גלישה", "subtopic": "זווית גלישה (כלפי קו האופק) בכל סוגי המגלשות", "chapter": "3", "section": "4.1.3"}, {"type": "item", "num": "א2", "topic": "קטע יציאה", "subtopic": "זווית קטע היציאה בכל סוגי המגלשות; גובה קטע היציאה (לפי אורך המגלשה)", "chapter": "3", "section": "4.1.4–4.2.2"}, {"type": "item", "num": "א3", "topic": "שיפוע קטע זינוק", "subtopic": "שיפוע קטע הזינוק בכל סוגי המגלשות", "chapter": "3", "section": "4.3"}, {"type": "item", "num": "א4", "topic": "מאחזי יד בקטע זינוק", "subtopic": "מאחזי יד בקטע הזינוק; אזן עליון (במידת הצורך)", "chapter": "3", "section": "4.4"}, {"type": "item", "num": "א5", "topic": "גובה דפנות המגלשה", "subtopic": "גובה דפנות המגלשה לאורך כל הקטעים", "chapter": "3", "section": "4.5"}, {"type": "item", "num": "א6", "topic": "אמצעי למניעת טיפוס", "subtopic": "אמצעי למניעת טיפוס; מאריך בקטע יציאה (במידת הצורך)", "chapter": "3", "section": "4.6"}, {"type": "notes"}], "old_carousel": [{"type": "subheader", "text": "בדיקות כלליות — חלק 1, חלק 4 טבלה 2"}, {"type": "item", "num": "א", "topic": "גובה נפילה", "subtopic": "גובה נפילה מהמתקן לקרקע (מגובה הרגלים)", "chapter": "1", "section": "8.1"}, {"type": "item", "num": "ב", "topic": "סכנת היחתכות / היצבטות", "subtopic": "בדיקה בכל חלקי המתקן", "chapter": "2", "section": "8.3"}, {"type": "item", "num": "ג", "topic": "הילכדות ראש", "subtopic": "ראש בחללים סגורים (כולל עיגול); ראש בחללים פתוחים למחצה + מרווחי V", "chapter": "2", "section": "8.4"}, {"type": "item", "num": "ד", "topic": "הילכדות אצבע / כף רגל", "subtopic": "אצבע (כולל במתקנים נעים); חריצים פתוחים + מרווחי V; כף רגל (כולל בחלקים נעים)", "chapter": "2", "section": "8.4"}, {"type": "subheader", "text": "מצב המתקן — מבנה וגימור"}, {"type": "item", "num": "ה", "topic": "מבנה", "subtopic": "כפיפות, עיוותים, עיקולים, סדקים, שברים וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ו", "topic": "גימור פני השטח", "subtopic": "חוסר ציפוי מגן, חלודה או שיתוך אחר, סדקים או חריצים בציפוי", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ז", "topic": "אמצעי חיבור", "subtopic": "העדר אמצעי חיבור, התרופפות, סגירה, העדר אמצעי אבטחה מפני התרופפות, העדר כיסויים, בליטות וקצוות חדים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ח", "topic": "קצוות", "subtopic": "בליטות, נקודות חדות או קצוות חדים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ט", "topic": "חלקים נעים", "subtopic": "שחיקת המסבים, העדר חומר סיכה במסבים, פגם תנועה (חופש יתר / היתפסות), רעש מופרז, חוסר מכסים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "י", "topic": "מעקי יד", "subtopic": "העדר מעקי יד, כיפופים, שברים, התרופפות וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "יא", "topic": "אמצעי עלייה", "subtopic": "מדרגות או שלבים חסרים, שבורים או רופפים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "יב", "topic": "יסודות", "subtopic": "סדקים, שברים, חופש בין יסוד לקרקע, בליטת היסוד מעל הקרקע", "chapter": "4", "section": "טבלה 2"}, {"type": "subheader", "text": "חומרים ותחזוקה"}, {"type": "item", "num": "יג", "topic": "כיסוי המשטחים", "subtopic": "העדר כיסוי, תזוזה של הכיסוי, כיסוי שגודלו אינו מספיק, ניקיון הכיסוי לפי הצורך", "chapter": "1–2", "section": "4.2.8.4–4.10"}, {"type": "item", "num": "יד", "topic": "פריטים מתכלים", "subtopic": "העדר פריטים, כיפופים, שחיקה, שברים, התרופפות, אונקלים פתוחים וכו׳", "chapter": "1", "section": "4.2.11"}, {"type": "item", "num": "טו", "topic": "חלקים עשויים עץ", "subtopic": "ריקבון, התקפת חרקים, סדקים מסוכנים", "chapter": "1", "section": "4.1.3"}, {"type": "item", "num": "טז", "topic": "חבלים (אם קיימים)", "subtopic": "השחתה, השפעת קרינה על סגולית, שחיקה", "chapter": "1", "section": "4.2.12"}, {"type": "item", "num": "יז", "topic": "תחזוקה", "subtopic": "בדיקת ציפוי חלקי המתכת (בצבע או ציפוי תקני אחר); בדיקת טיפול במשטחי עץ שלא חוסנו נגד מזיקים", "chapter": "4", "section": "5.2–5.2.2"}, {"type": "notes"}, {"type": "subheader", "text": "בדיקות ספציפיות — קרוסלות (סחרחרות)"}, {"type": "item", "num": "א1", "topic": "מרווח תחתון", "subtopic": "מרווח תחתון (גובה מהקרקע, לפי סוג הקרוסלה)", "chapter": "5", "section": "6"}, {"type": "item", "num": "א2", "topic": "ציר וסיבוב", "subtopic": "תקינות ציר הסיבוב; סיכה ותחזוקה; ללא טלטול מופרז", "chapter": "5", "section": "4–6"}, {"type": "notes"}], "old_seesaw": [{"type": "subheader", "text": "בדיקות כלליות — חלק 1, חלק 4 טבלה 2"}, {"type": "item", "num": "א", "topic": "גובה נפילה", "subtopic": "גובה נפילה מהמתקן לקרקע (מגובה הרגלים)", "chapter": "1", "section": "8.1"}, {"type": "item", "num": "ב", "topic": "סכנת היחתכות / היצבטות", "subtopic": "בדיקה בכל חלקי המתקן", "chapter": "2", "section": "8.3"}, {"type": "item", "num": "ג", "topic": "הילכדות ראש", "subtopic": "ראש בחללים סגורים (כולל עיגול); ראש בחללים פתוחים למחצה + מרווחי V", "chapter": "2", "section": "8.4"}, {"type": "item", "num": "ד", "topic": "הילכדות אצבע / כף רגל", "subtopic": "אצבע (כולל במתקנים נעים); חריצים פתוחים + מרווחי V; כף רגל (כולל בחלקים נעים)", "chapter": "2", "section": "8.4"}, {"type": "subheader", "text": "מצב המתקן — מבנה וגימור"}, {"type": "item", "num": "ה", "topic": "מבנה", "subtopic": "כפיפות, עיוותים, עיקולים, סדקים, שברים וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ו", "topic": "גימור פני השטח", "subtopic": "חוסר ציפוי מגן, חלודה או שיתוך אחר, סדקים או חריצים בציפוי", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ז", "topic": "אמצעי חיבור", "subtopic": "העדר אמצעי חיבור, התרופפות, סגירה, העדר אמצעי אבטחה מפני התרופפות, העדר כיסויים, בליטות וקצוות חדים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ח", "topic": "קצוות", "subtopic": "בליטות, נקודות חדות או קצוות חדים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ט", "topic": "חלקים נעים", "subtopic": "שחיקת המסבים, העדר חומר סיכה במסבים, פגם תנועה (חופש יתר / היתפסות), רעש מופרז, חוסר מכסים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "י", "topic": "מעקי יד", "subtopic": "העדר מעקי יד, כיפופים, שברים, התרופפות וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "יא", "topic": "אמצעי עלייה", "subtopic": "מדרגות או שלבים חסרים, שבורים או רופפים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "יב", "topic": "יסודות", "subtopic": "סדקים, שברים, חופש בין יסוד לקרקע, בליטת היסוד מעל הקרקע", "chapter": "4", "section": "טבלה 2"}, {"type": "subheader", "text": "חומרים ותחזוקה"}, {"type": "item", "num": "יג", "topic": "כיסוי המשטחים", "subtopic": "העדר כיסוי, תזוזה של הכיסוי, כיסוי שגודלו אינו מספיק, ניקיון הכיסוי לפי הצורך", "chapter": "1–2", "section": "4.2.8.4–4.10"}, {"type": "item", "num": "יד", "topic": "פריטים מתכלים", "subtopic": "העדר פריטים, כיפופים, שחיקה, שברים, התרופפות, אונקלים פתוחים וכו׳", "chapter": "1", "section": "4.2.11"}, {"type": "item", "num": "טו", "topic": "חלקים עשויים עץ", "subtopic": "ריקבון, התקפת חרקים, סדקים מסוכנים", "chapter": "1", "section": "4.1.3"}, {"type": "item", "num": "טז", "topic": "חבלים (אם קיימים)", "subtopic": "השחתה, השפעת קרינה על סגולית, שחיקה", "chapter": "1", "section": "4.2.12"}, {"type": "item", "num": "יז", "topic": "תחזוקה", "subtopic": "בדיקת ציפוי חלקי המתכת (בצבע או ציפוי תקני אחר); בדיקת טיפול במשטחי עץ שלא חוסנו נגד מזיקים", "chapter": "4", "section": "5.2–5.2.2"}, {"type": "notes"}, {"type": "subheader", "text": "בדיקות ספציפיות — מתקני נענוע / עלה ורד"}, {"type": "item", "num": "א1", "topic": "ריסון תנועה", "subtopic": "ריסון תנועה (צמיג, קפיץ וכו׳) — תקין ואפקטיבי", "chapter": "6", "section": "4.3"}, {"type": "item", "num": "א2", "topic": "תומכי כף רגל", "subtopic": "תומכי כף רגל (במידת הצורך) — קיימים ותקינים", "chapter": "6", "section": "4.6"}, {"type": "item", "num": "א3", "topic": "תומכי יד", "subtopic": "תומכי יד — קיימים, תקינים ומאובטחים", "chapter": "6", "section": "4.7"}, {"type": "item", "num": "א4", "topic": "גובה מושב / העמדה", "subtopic": "גובה מושב העמדה בהתאם לדרישות; קווי המתאר", "chapter": "6", "section": "4.8–4.9"}, {"type": "notes"}], "old_arch": [{"type": "subheader", "text": "בדיקות כלליות — חלק 1, חלק 4 טבלה 2"}, {"type": "item", "num": "א", "topic": "גובה נפילה", "subtopic": "גובה נפילה מהמתקן לקרקע (מגובה הרגלים)", "chapter": "1", "section": "8.1"}, {"type": "item", "num": "ב", "topic": "סכנת היחתכות / היצבטות", "subtopic": "בדיקה בכל חלקי המתקן", "chapter": "2", "section": "8.3"}, {"type": "item", "num": "ג", "topic": "הילכדות ראש", "subtopic": "ראש בחללים סגורים (כולל עיגול); ראש בחללים פתוחים למחצה + מרווחי V", "chapter": "2", "section": "8.4"}, {"type": "item", "num": "ד", "topic": "הילכדות אצבע / כף רגל", "subtopic": "אצבע (כולל במתקנים נעים); חריצים פתוחים + מרווחי V; כף רגל (כולל בחלקים נעים)", "chapter": "2", "section": "8.4"}, {"type": "subheader", "text": "מצב המתקן — מבנה וגימור"}, {"type": "item", "num": "ה", "topic": "מבנה", "subtopic": "כפיפות, עיוותים, עיקולים, סדקים, שברים וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ו", "topic": "גימור פני השטח", "subtopic": "חוסר ציפוי מגן, חלודה או שיתוך אחר, סדקים או חריצים בציפוי", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ז", "topic": "אמצעי חיבור", "subtopic": "העדר אמצעי חיבור, התרופפות, סגירה, העדר אמצעי אבטחה מפני התרופפות, העדר כיסויים, בליטות וקצוות חדים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ח", "topic": "קצוות", "subtopic": "בליטות, נקודות חדות או קצוות חדים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ט", "topic": "חלקים נעים", "subtopic": "שחיקת המסבים, העדר חומר סיכה במסבים, פגם תנועה (חופש יתר / היתפסות), רעש מופרז, חוסר מכסים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "י", "topic": "מעקי יד", "subtopic": "העדר מעקי יד, כיפופים, שברים, התרופפות וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "יא", "topic": "אמצעי עלייה", "subtopic": "מדרגות או שלבים חסרים, שבורים או רופפים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "יב", "topic": "יסודות", "subtopic": "סדקים, שברים, חופש בין יסוד לקרקע, בליטת היסוד מעל הקרקע", "chapter": "4", "section": "טבלה 2"}, {"type": "subheader", "text": "חומרים ותחזוקה"}, {"type": "item", "num": "יג", "topic": "כיסוי המשטחים", "subtopic": "העדר כיסוי, תזוזה של הכיסוי, כיסוי שגודלו אינו מספיק, ניקיון הכיסוי לפי הצורך", "chapter": "1–2", "section": "4.2.8.4–4.10"}, {"type": "item", "num": "יד", "topic": "פריטים מתכלים", "subtopic": "העדר פריטים, כיפופים, שחיקה, שברים, התרופפות, אונקלים פתוחים וכו׳", "chapter": "1", "section": "4.2.11"}, {"type": "item", "num": "טו", "topic": "חלקים עשויים עץ", "subtopic": "ריקבון, התקפת חרקים, סדקים מסוכנים", "chapter": "1", "section": "4.1.3"}, {"type": "item", "num": "טז", "topic": "חבלים (אם קיימים)", "subtopic": "השחתה, השפעת קרינה על סגולית, שחיקה", "chapter": "1", "section": "4.2.12"}, {"type": "item", "num": "יז", "topic": "תחזוקה", "subtopic": "בדיקת ציפוי חלקי המתכת (בצבע או ציפוי תקני אחר); בדיקת טיפול במשטחי עץ שלא חוסנו נגד מזיקים", "chapter": "4", "section": "5.2–5.2.2"}, {"type": "notes"}, {"type": "subheader", "text": "בדיקות ספציפיות — סולם קשתי"}, {"type": "item", "num": "א1", "topic": "גובה שלב ראשון", "subtopic": "גובה שלב ראשון מהקרקע בהתאם לדרישות", "chapter": "3", "section": "ציוד 1"}, {"type": "item", "num": "א2", "topic": "שלבים", "subtopic": "שלבים שלמים, לא שבורים, לא רופפים; מרווחים אחידים", "chapter": "4", "section": "טבלה 2"}, {"type": "notes"}], "old_other": [{"type": "subheader", "text": "בדיקות כלליות — חלק 1, חלק 4 טבלה 2"}, {"type": "item", "num": "א", "topic": "גובה נפילה", "subtopic": "גובה נפילה מהמתקן לקרקע (מגובה הרגלים)", "chapter": "1", "section": "8.1"}, {"type": "item", "num": "ב", "topic": "סכנת היחתכות / היצבטות", "subtopic": "בדיקה בכל חלקי המתקן", "chapter": "2", "section": "8.3"}, {"type": "item", "num": "ג", "topic": "הילכדות ראש", "subtopic": "ראש בחללים סגורים (כולל עיגול); ראש בחללים פתוחים למחצה + מרווחי V", "chapter": "2", "section": "8.4"}, {"type": "item", "num": "ד", "topic": "הילכדות אצבע / כף רגל", "subtopic": "אצבע (כולל במתקנים נעים); חריצים פתוחים + מרווחי V; כף רגל (כולל בחלקים נעים)", "chapter": "2", "section": "8.4"}, {"type": "subheader", "text": "מצב המתקן — מבנה וגימור"}, {"type": "item", "num": "ה", "topic": "מבנה", "subtopic": "כפיפות, עיוותים, עיקולים, סדקים, שברים וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ו", "topic": "גימור פני השטח", "subtopic": "חוסר ציפוי מגן, חלודה או שיתוך אחר, סדקים או חריצים בציפוי", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ז", "topic": "אמצעי חיבור", "subtopic": "העדר אמצעי חיבור, התרופפות, סגירה, העדר אמצעי אבטחה מפני התרופפות, העדר כיסויים, בליטות וקצוות חדים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ח", "topic": "קצוות", "subtopic": "בליטות, נקודות חדות או קצוות חדים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "ט", "topic": "חלקים נעים", "subtopic": "שחיקת המסבים, העדר חומר סיכה במסבים, פגם תנועה (חופש יתר / היתפסות), רעש מופרז, חוסר מכסים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "י", "topic": "מעקי יד", "subtopic": "העדר מעקי יד, כיפופים, שברים, התרופפות וכו׳", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "יא", "topic": "אמצעי עלייה", "subtopic": "מדרגות או שלבים חסרים, שבורים או רופפים", "chapter": "4", "section": "טבלה 2"}, {"type": "item", "num": "יב", "topic": "יסודות", "subtopic": "סדקים, שברים, חופש בין יסוד לקרקע, בליטת היסוד מעל הקרקע", "chapter": "4", "section": "טבלה 2"}, {"type": "subheader", "text": "חומרים ותחזוקה"}, {"type": "item", "num": "יג", "topic": "כיסוי המשטחים", "subtopic": "העדר כיסוי, תזוזה של הכיסוי, כיסוי שגודלו אינו מספיק, ניקיון הכיסוי לפי הצורך", "chapter": "1–2", "section": "4.2.8.4–4.10"}, {"type": "item", "num": "יד", "topic": "פריטים מתכלים", "subtopic": "העדר פריטים, כיפופים, שחיקה, שברים, התרופפות, אונקלים פתוחים וכו׳", "chapter": "1", "section": "4.2.11"}, {"type": "item", "num": "טו", "topic": "חלקים עשויים עץ", "subtopic": "ריקבון, התקפת חרקים, סדקים מסוכנים", "chapter": "1", "section": "4.1.3"}, {"type": "item", "num": "טז", "topic": "חבלים (אם קיימים)", "subtopic": "השחתה, השפעת קרינה על סגולית, שחיקה", "chapter": "1", "section": "4.2.12"}, {"type": "item", "num": "יז", "topic": "תחזוקה", "subtopic": "בדיקת ציפוי חלקי המתכת (בצבע או ציפוי תקני אחר); בדיקת טיפול במשטחי עץ שלא חוסנו נגד מזיקים", "chapter": "4", "section": "5.2–5.2.2"}, {"type": "notes"}, {"type": "subheader", "text": "בדיקות ספציפיות — מתקן אחר"}, {"type": "item", "num": "א1", "topic": "תיאור ובדיקה", "subtopic": "בדיקה ייחודית בהתאם לסוג המתקן ולדרישות הרלוונטיות", "chapter": "1", "section": "כלל"}, {"type": "notes"}]};
 
+// ===== ת"י 1497 — מתקני כושר =====
+const FITNESS_EQUIPMENT_TYPES = [
+  {"id":"fit_generic","label":"מתקן כושר גנרי","short":"מתקן כושר","letter":"כ"},
+  {"id":"fit_pendulum","label":"מתקן תנועה מטוטלת (pendulum)","short":"מטוטלת","letter":"כ"},
+  {"id":"fit_rotation","label":"מתקן סיבוב / דיסק","short":"סיבוב","letter":"כ"},
+  {"id":"fit_stepper","label":"סטפר / הליכון","short":"סטפר","letter":"כ"},
+  {"id":"fit_pull","label":"מתקן משיכה עילית / לחיצה","short":"משיכה","letter":"כ"},
+  {"id":"fit_bike","label":"אופני כושר נייחות","short":"אופניים","letter":"כ"},
+  {"id":"fit_other","label":"מתקן כושר אחר","short":"כושר אחר","letter":"כ"}
+];
+
+const FITNESS_CHECKLIST_1497 = [
+  {"type":"subheader","text":"פרטי המתקן — תיאור טכני"},
+  {"type":"equip_details"},
+  {"type":"subheader","text":"חלק 2 §4 — דרישות בטיחות"},
+  {"type":"item","num":"א","topic":"כללי — עמדה עם כמה מכשירים","subtopic":"רק 2 מותקנים במקביל לאותו ציר תנועה; מכשירים לא נוגדי כיוון זה עם זה; שימוש במכשיר לא מסכן משתמשי מכשירים אחרים","chapter":"1","section":"4.1","std_ref":"§4.1"},
+  {"type":"item","num":"ב","topic":"דרכי גישה ואתר","subtopic":"מוגנות מפני גלישה, מפולות, זרמי מים, ניקוז גשמים","chapter":"1","section":"4.1.1.2","std_ref":"§4.1.1.2"},
+  {"type":"item","num":"ג","topic":"קו חשמל עילי — גובה מוליך","subtopic":"גובה המוליך לפי טבלה 1 בתקן","chapter":"1","section":"4.1.1.3","std_ref":"§4.1.1.3"},
+  {"type":"item","num":"ד","topic":"מרחק מקו חשמל עילי","subtopic":"מרחק לפי טבלה 2,3 בתקן","chapter":"1","section":"4.1.2","std_ref":"§4.1.2"},
+  {"type":"item","num":"ה","topic":"קצוות פרופילים","subtopic":"קצוות הפרופילים הצינוריים יהיו חסומים","chapter":"1","section":"4.2","std_ref":"§4.2"},
+  {"type":"item","num":"ו","topic":"חומרים — שלמות מבנית","subtopic":"חומרים אינם פוגעים בשלמות המבנה (לא שבירים, לא מאולתרים)","chapter":"1","section":"4.3.1","std_ref":"§4.3.1"},
+  {"type":"item","num":"ז","topic":"שלמות מבנית — חישוב","subtopic":"נדרש חישוב סטטי או בדיקה מעשית מתועדת ליציבות המתקן","chapter":"1","section":"4.4","std_ref":"§4.4"},
+  {"type":"item","num":"ח","topic":"כבלי מתכת","subtopic":"תעודות התאמה לחבקים ומהדקי כבלים; מידע אודות כבלים וכיסוי (חוזק, גלוון, עמידות UV)","chapter":"1","section":"4.5","std_ref":"§4.5"},
+  {"type":"item","num":"ט","topic":"מנגנונים וגלגלות","subtopic":"סמויים לחלוטין או עומדים בדרישות §4.8.2 / §4.8.3","chapter":"1","section":"4.6.1","std_ref":"§4.6.1"},
+  {"type":"item","num":"י","topic":"מעצורים — תנועה מטוטלת","subtopic":"מותקנים מעצורים; לא נגישים; טווח תנועה ≤70° (ציור 8)","chapter":"1","section":"4.6.2","std_ref":"§4.6.2"},
+  {"type":"item","num":"יא","topic":"משככי זעזועים","subtopic":"רכיבים במגע זה עם זה: מערכת משככי זעזועים; אימות מול תיק מוצר ובדיקה פונקציונאלית","chapter":"1","section":"4.6.3","std_ref":"§4.6.3"},
+  {"type":"item","num":"יב","topic":"מרווח בטיחות מהקרקע","subtopic":"חלקים נעים אופקית: מרווח ≥110 מ\"מ (למעט נקודות משען) — ציור 9","chapter":"1","section":"4.7","std_ref":"§4.7"},
+  {"type":"item","num":"יג","topic":"הילכדויות — כללי","subtopic":"לא יהיו פתחים עם היצרות <60° כלפי מטה; דרישות לא חלות על אזורים לא נגישים","chapter":"1","section":"4.8.1","std_ref":"§4.8.1"},
+  {"type":"item","num":"יד","topic":"פתחים/מרווחים מידות משתנות","subtopic":"נגישים בין חלקים נעים: לא מאפשרים גישה לאזור הילכדות; מדיד ∅60 מ\"מ עובר דרכם (ציור 10)","chapter":"1","section":"4.8.2","std_ref":"§4.8.2"},
+  {"type":"item","num":"טו","topic":"פתחים עם חלקים נעים — מידה קבועה","subtopic":"מדיד ∅25 מ\"מ עובר בצמוד לציר; ∅60 מ\"מ עובר באזורים אחרים","chapter":"1","section":"4.8.3.1","std_ref":"§4.8.3.1"},
+  {"type":"item","num":"טז","topic":"פתחים ללא חלקים נעים","subtopic":"כניסה ≥600 מ\"מ: מדיד ∅8 מ\"מ לא עובר; אם עובר — גם ∅25 מ\"מ יעבור (§ג.3.2)","chapter":"1","section":"4.8.3.2","std_ref":"§4.8.3.2"},
+  {"type":"item","num":"יז","topic":"הילכדות ראש/צוואר — פתחים מלאים","subtopic":"מדידים C ו-E (∅130 וטורסו) לא עוברים אלא אם גם מדיד D (גדול) עובר","chapter":"1","section":"4.8.3.3","std_ref":"§4.8.3.3א"},
+  {"type":"item","num":"יח","topic":"הילכדות ראש/צוואר — פתחים חלקיים/V","subtopic":"פתח לא נגיש (לפי ג.2.2); אם נגיש ≥600 מ\"מ — תואם בדיקות לפי תלות בזווית (ציור ג-4)","chapter":"1","section":"4.8.3.3","std_ref":"§4.8.3.3ב"},
+  {"type":"item","num":"יט","topic":"המרחב החופשי","subtopic":"עמידה: r=1000, h=2200 מ\"מ; ישיבה: r=1000, h=1500 מ\"מ; תלייה: r=500, h=300 מעל + 2200 מתחת; ללא חפיפה בין מתקנים נפרדים","chapter":"1","section":"4.9","std_ref":"§4.9"},
+  {"type":"item","num":"כ","topic":"מרחב הפעילות","subtopic":"גליל r=1500 מ\"מ סביב המתקן, h=2500 מ\"מ; חפיפה חלקית מותרת","chapter":"1","section":"4.10","std_ref":"§4.10"},
+  {"type":"item","num":"כא","topic":"אחיזה","subtopic":"חתך רוחב אחיזה: 16–45 מ\"מ","chapter":"1","section":"4.11.1","std_ref":"§4.11.1"},
+  {"type":"item","num":"כב","topic":"לפיתה (אחיזה חלקית)","subtopic":"חתך רוחב לפיתה: ≤60 מ\"מ","chapter":"1","section":"4.11.2","std_ref":"§4.11.2"},
+  {"type":"item","num":"כג","topic":"מדרך רגליים","subtopic":"שטח דריכה ≥120×320 מ\"מ לכל רגל; שוליים 3 צדדים בגובה 10–30 מ\"מ; עגולים: ∅≥320 מ\"מ, ללא שוליים עם עוצר; מינימום 120 מ\"מ לרגל לתנועה לא-רגלית","chapter":"1","section":"4.11.3","std_ref":"§4.11.3"},
+  {"type":"item","num":"כד","topic":"חיבורים","subtopic":"אמצעים למניעת התרופפות; לא ניתן לפרק ללא כלים","chapter":"1","section":"4.13","std_ref":"§4.13"},
+  {"type":"subheader","text":"חלק 2 §5 — בחינה שנתית: מצב פיזי (חלק 1 §4 ו-2 §6)"},
+  {"type":"item","num":"כה","topic":"מבנה כללי","subtopic":"כפיפות, עיוותים, עיקולים, סדקים, שברים","chapter":"2","section":"5","std_ref":"§5 + חלק 2 §6.2"},
+  {"type":"item","num":"כו","topic":"אמצעי חיבור","subtopic":"העדר אמצעי חיבור; התרופפות; העדר אמצעי הבטחה מפני התרופפות","chapter":"2","section":"5","std_ref":"§5"},
+  {"type":"item","num":"כז","topic":"חלקים נעים","subtopic":"העדר חומרי סיכה במסבים; פגם בתנועה","chapter":"2","section":"5","std_ref":"§5"},
+  {"type":"item","num":"כח","topic":"שרשרת","subtopic":"אי תקינות החיבורים ושחיקתם","chapter":"2","section":"5","std_ref":"§5"},
+  {"type":"item","num":"כט","topic":"יסודות","subtopic":"חופש בין יסוד לקרקע; בליטות היסוד מעל פני הקרקע","chapter":"2","section":"5","std_ref":"§5"},
+  {"type":"item","num":"ל","topic":"כיסוי משטחים","subtopic":"העדר כיסוי מספיק; אי ניקיון הכיסוי","chapter":"2","section":"5","std_ref":"§5"},
+  {"type":"item","num":"לא","topic":"חבלים","subtopic":"השחתה","chapter":"2","section":"5","std_ref":"§5"},
+  {"type":"item","num":"לב","topic":"פריטים מתכלים (גומיות, פקקים)","subtopic":"העדר פריטים; כיפופים; שחיקה; שברים; התרופפות; אונקלים פתוחים","chapter":"2","section":"5","std_ref":"§5"},
+  {"type":"item","num":"לג","topic":"סימון ושילוט","subtopic":"שילוט לא קריא; בעיות קיימות","chapter":"2","section":"5","std_ref":"§5"},
+  {"type":"item","num":"לד","topic":"הגנה מפני יציאה לכביש","subtopic":"מרחק <4 מטר: חוסר הפרדה; גובה מחסום <90 ס\"מ; מבנה מחסום מאפשר מעבר","chapter":"2","section":"5","std_ref":"§5"},
+  {"type":"item","num":"לה","topic":"קרבה למגרש משחקים","subtopic":"חוסר הפרדה כאשר מרחק <25 מטר","chapter":"2","section":"5","std_ref":"§5"},
+  {"type":"subheader","text":"חלק 2 §6.2ג׳ — השפעת מזג אוויר"},
+  {"type":"item","num":"לו","topic":"השפעת מזג אוויר","subtopic":"ריקבון או שיתוך; שינוי ברמת בטיחות; חלקים אטומים לכל חייהם; בלייה","chapter":"2","section":"6.2ג","std_ref":"§6.2ג"},
+  {"type":"item","num":"לז","topic":"חומרים מחוזקים (פיברגלס)","subtopic":"חלקים עשויים פלסטיק מחוזק בסיבי זכוכית","chapter":"2","section":"6.3.1","std_ref":"§6.3.1"},
+  {"type":"item","num":"לח","topic":"מתקנים בעלי עמוד תמך יחיד","subtopic":"ניטור הגרעה של מתקנים","chapter":"2","section":"6.3.2","std_ref":"§6.3.2"},
+  {"type":"subheader","text":"חלק 2 §8.2.4 — אמצעי בטיחות כלליים"},
+  {"type":"item","num":"לט","topic":"שלט מידע","subtopic":"מס' חירום; מס' תחזוקה; שם האתר; כתובת; מידע רלוונטי; דרכי גישה פנויות","chapter":"2","section":"8.2.4","std_ref":"§8.2.4"},
+  {"type":"subheader","text":"חלק 1 §7 — מידע למשתמש"},
+  {"type":"item","num":"מ","topic":"שלט מידע למשתמש (§7.1)","subtopic":"גיל משתמשים; פעילות ללא השגחה; אזהרת מגבלות בריאותיות (לב/ל\"ד); להפסיק אם לא מרגישים טוב; תקינות לפני שימוש; ביצוע נכון; נעליים; חימום/קירור","chapter":"1","section":"7.1","std_ref":"§7.1"},
+  {"type":"item","num":"מא","topic":"שלט הוראות (§7.2)","subtopic":"שם ודרגת קושי; מטרת הפעילות; הוראות שימוש; הוראות נשימה; תרשים פעילות; אזהרות","chapter":"1","section":"7.2","std_ref":"§7.2"},
+  {"type":"subheader","text":"חלק 1 §8 — סימון"},
+  {"type":"item","num":"מב","topic":"סימון המתקן","subtopic":"קריא ובר-קיימה ≥8 מ\"מ; שם יצרן ומען; מק\"ט + שנת ייצור","chapter":"1","section":"8","std_ref":"§8"},
+  {"type":"notes"}
+];
+
+const FITNESS_SITE_CHECKS_1497 = [
+  {"type":"subheader","text":"בחינה מורחבת — אתר ללא הפרדה ממגרש משחקים"},
+  {"type":"item","num":"מג","topic":"הגנה מפני פצעיה במרחב נפילה","subtopic":"התאמת כיסוי שטח (חלק 1 §4.2.8.4)","chapter":"1","section":"4.2.8.4","std_ref":"§4.2.8.4"},
+  {"type":"item","num":"מד","topic":"יסודות — תכן","subtopic":"תכן בוצע ע\"י מהנדס; עומק, צורה (חלק 1 §4.2.14)","chapter":"1","section":"4.2.14","std_ref":"§4.2.14"},
+  {"type":"item","num":"מה","topic":"מחסום מפני מקורות סיכון","subtopic":"כביש/חניה/מים במרחק <15 מ': חובת מחסום (חלק 8 §3.1.1)","chapter":"8","section":"3.1.1","std_ref":"§3.1.1"}
+];
+
 // ===== GLOBALS =====
 const counts = {};
 let inspectionType = 'annual';
-let selectedStd = 'new';
+// selectedStds is now a Set of active standards: 'new', 'old', 'fitness'
+let selectedStds = new Set();
+let globalEquipCounter = 0;
 EQUIPMENT_TYPES.forEach(eq => { counts[eq.id] = 0; });
+OLD_EQUIPMENT_TYPES.forEach(eq => { counts[eq.id] = 0; });
+FITNESS_EQUIPMENT_TYPES.forEach(eq => { counts[eq.id] = 0; });
+
+// legacy compat — single-std code references selectedStd
+Object.defineProperty(window, 'selectedStd', {
+  get() { 
+    if (selectedStds.has('new') && selectedStds.has('old') && selectedStds.has('fitness')) return 'mixed_all';
+    if (selectedStds.has('new') && selectedStds.has('old')) return 'mixed';
+    if (selectedStds.has('new') && selectedStds.has('fitness')) return 'mixed_new_fit';
+    if (selectedStds.has('old') && selectedStds.has('fitness')) return 'mixed_old_fit';
+    if (selectedStds.has('new')) return 'new';
+    if (selectedStds.has('old')) return 'old';
+    if (selectedStds.has('fitness')) return 'fitness';
+    return '';
+  }
+});
 
 // ===== SETUP =====
-function selectStd(std) {
-  selectedStd = std;
-  document.getElementById('std_new').classList.toggle('selected', std==='new');
-  document.getElementById('std_old').classList.toggle('selected', std==='old');
-  document.getElementById('std_mixed').classList.toggle('selected', std==='mixed');
-  // Reset all counts
-  const allTypes = [...EQUIPMENT_TYPES, ...OLD_EQUIPMENT_TYPES];
-  allTypes.forEach(eq => { counts[eq.id] = 0; });
+function onStdChange() {
+  const newCb = document.getElementById('std_new');
+  const oldCb = document.getElementById('std_old');
+  const fitCb = document.getElementById('std_fitness');
+  selectedStds = new Set();
+  if (newCb.checked) selectedStds.add('new');
+  if (oldCb.checked) selectedStds.add('old');
+  if (fitCb.checked) selectedStds.add('fitness');
+  // Update visual selected state on labels
+  document.getElementById('std_new_label').classList.toggle('selected', newCb.checked);
+  document.getElementById('std_old_label').classList.toggle('selected', oldCb.checked);
+  document.getElementById('std_fitness_label').classList.toggle('selected', fitCb.checked);
+  // Reset counts for deselected standards
+  if (!newCb.checked) EQUIPMENT_TYPES.forEach(eq => { counts[eq.id] = 0; });
+  if (!oldCb.checked) OLD_EQUIPMENT_TYPES.forEach(eq => { counts[eq.id] = 0; });
+  if (!fitCb.checked) FITNESS_EQUIPMENT_TYPES.forEach(eq => { counts[eq.id] = 0; });
   buildSetupGrid();
+}
+
+// Keep selectStd for backward compatibility (init call)
+function selectStd(std) {
+  const newCb = document.getElementById('std_new');
+  const oldCb = document.getElementById('std_old');
+  const fitCb = document.getElementById('std_fitness');
+  newCb.checked = (std === 'new');
+  oldCb.checked = (std === 'old');
+  fitCb.checked = (std === 'fitness');
+  onStdChange();
 }
 
 function selectInspType(btn, type) {
@@ -337,22 +436,36 @@ function selectInspType(btn, type) {
 }
 
 function buildSetupGrid() {
-  const single = document.getElementById('eq-single-layout');
-  const mixed = document.getElementById('eq-mixed-layout');
+  const container = document.getElementById('eq-grid-container');
+  const title = document.getElementById('eq-card-title');
   
-  if (selectedStd === 'mixed') {
-    single.style.display = 'none';
-    mixed.style.display = 'block';
-    document.getElementById('eq-grid-new').innerHTML = EQUIPMENT_TYPES.map(eq => buildEqOptionHtml(eq, 'new_')).join('');
-    document.getElementById('eq-grid-old').innerHTML = OLD_EQUIPMENT_TYPES.map(eq => buildEqOptionHtml(eq, 'old_')).join('');
+  if (selectedStds.size === 0) {
+    container.innerHTML = '<p style="color:var(--text-light);font-size:13px;text-align:center;padding:20px">בחר תקן אחד או יותר למעלה</p>';
+    if (title) title.textContent = 'סוגי מתקנים באתר';
     return;
   }
   
-  single.style.display = 'block';
-  mixed.style.display = 'none';
-  const eqTypes = selectedStd === 'old' ? OLD_EQUIPMENT_TYPES : EQUIPMENT_TYPES;
-  const grid = document.getElementById('eq-grid');
-  grid.innerHTML = eqTypes.map(eq => buildEqOptionHtml(eq, '')).join('');
+  let html = '';
+  const labels = [];
+  if (selectedStds.has('new')) labels.push('ת"י 1498 לאחר 2006');
+  if (selectedStds.has('old')) labels.push('ת"י 1498 לפני 2006');
+  if (selectedStds.has('fitness')) labels.push('ת"י 1497 כושר');
+  if (title) title.textContent = `מתקנים — ${labels.join(' + ')} — הגדר כמות לכל סוג`;
+  
+  if (selectedStds.has('new')) {
+    if (selectedStds.size > 1) html += `<div class="eq-section-header new-std-header">🆕 ת"י 1498 לאחר 2006 — מתקני משחקים</div>`;
+    html += `<div class="eq-grid" id="eq-grid-new">${EQUIPMENT_TYPES.map(eq => buildEqOptionHtml(eq, 'new_')).join('')}</div>`;
+  }
+  if (selectedStds.has('old')) {
+    if (selectedStds.size > 1) html += `<div class="eq-section-header old-std-header">📜 ת"י 1498 לפני 2006 — מתקני משחקים</div>`;
+    html += `<div class="eq-grid" id="eq-grid-old">${OLD_EQUIPMENT_TYPES.map(eq => buildEqOptionHtml(eq, 'old_')).join('')}</div>`;
+  }
+  if (selectedStds.has('fitness')) {
+    if (selectedStds.size > 1) html += `<div class="eq-section-header fit-std-header">💪 ת"י 1497 — מתקני כושר</div>`;
+    html += `<div class="eq-grid" id="eq-grid-fit">${FITNESS_EQUIPMENT_TYPES.map(eq => buildEqOptionHtml(eq, 'fit_')).join('')}</div>`;
+  }
+  
+  container.innerHTML = html;
 }
 
 function buildEqOptionHtml(eq, gridPrefix) {
@@ -377,8 +490,8 @@ function changeCount(id, prefix, delta) {
   // Support old 2-arg call without prefix (single grid)
   if (typeof prefix === 'number') { delta = prefix; prefix = ''; }
   counts[id] = Math.max(0, (counts[id]||0)+delta);
-  // Update ALL visual instances of this counter (in case same id appears in both grids)
-  ['', 'new_', 'old_'].forEach(p => {
+  // Update ALL visual instances of this counter (in case same id appears in multiple grids)
+  ['', 'new_', 'old_', 'fit_'].forEach(p => {
     const countEl = document.getElementById('count_' + p + id);
     const optEl = document.getElementById('eqopt_' + p + id);
     if (countEl) countEl.textContent = counts[id];
@@ -388,12 +501,15 @@ function changeCount(id, prefix, delta) {
 
 // ===== FORM GENERATION =====
 function generateForm() {
-  if (!selectedStd) { alert('אנא בחר מהדורת תקן'); return; }
-  globalEquipCounter = 0; // reset sequential counter
-  const siteName = document.getElementById('s_site_name').value || 'מגרש משחקים';
+  if (selectedStds.size === 0) { alert('אנא בחר לפחות תקן אחד'); return; }
+  globalEquipCounter = 0;
+  const siteName = document.getElementById('s_site_name').value || 'אתר בדיקה';
   const date = document.getElementById('s_date').value;
-  const stdLabel = selectedStd==='new' ? 'תקן 2006+' : selectedStd==='old' ? 'תקן לפני 2006' : 'שילוב תקנים';
-  document.getElementById('topbar-title').textContent = `בדיקת בטיחות — ${siteName} | ${date} | ${stdLabel}`;
+  const labels = [];
+  if (selectedStds.has('new')) labels.push('ת"י 1498 לאחר 2006');
+  if (selectedStds.has('old')) labels.push('ת"י 1498 לפני 2006');
+  if (selectedStds.has('fitness')) labels.push('ת"י 1497 כושר');
+  document.getElementById('topbar-title').textContent = `בדיקת בטיחות — ${siteName} | ${date} | ${labels.join(' + ')}`;
 
   const tabsBar = document.getElementById('tabs-bar');
   const tabsContent = document.getElementById('tabs-content');
@@ -401,73 +517,74 @@ function generateForm() {
 
   addTab('general','📋 פרטי בדיקה',tabsBar,tabsContent,buildGeneralTab());
 
-  if (selectedStd === 'new') {
+  // Site tab — new std (1498 new) takes priority for site checks
+  if (selectedStds.has('new')) {
     addTab('site','א. האתר',tabsBar,tabsContent,buildSiteTab());
+  } else if (selectedStds.has('old')) {
+    addTab('old_site','א. האתר',tabsBar,tabsContent,buildOldSiteTab());
+  } else if (selectedStds.has('fitness')) {
+    addTab('fit_site','א. האתר',tabsBar,tabsContent,buildFitnessSiteTab());
+  }
+
+  // ת"י 1498 new equipment tabs
+  if (selectedStds.has('new')) {
     EQUIPMENT_TYPES.forEach(eq => {
       const n = counts[eq.id]||0;
       for (let i=1;i<=n;i++) {
         globalEquipCounter++;
         const tabId=`${eq.id}_${i}`;
-        const label = n>1?`${eq.short} ${i}`:eq.short;
+        const prefix = selectedStds.size > 1 ? '🆕 ' : '';
+        const label = n>1?`${prefix}${eq.short} ${i}`:`${prefix}${eq.short}`;
         addTab(tabId,label,tabsBar,tabsContent,buildEquipmentTab(eq,i,globalEquipCounter));
       }
     });
-    addTab('maint','ח. תחזוקה',tabsBar,tabsContent,buildMaintenanceTab());
-  } else if (selectedStd === 'old') {
-    // Old standard only
-    addTab('old_site','א. האתר',tabsBar,tabsContent,buildOldSiteTab());
+  }
+
+  // ת"י 1498 old equipment tabs
+  if (selectedStds.has('old')) {
     OLD_EQUIPMENT_TYPES.forEach(eq => {
       const n = counts[eq.id]||0;
       for (let i=1;i<=n;i++) {
         globalEquipCounter++;
         const tabId=`${eq.id}_${i}`;
-        const label = n>1?`${eq.short} ${i}`:eq.short;
+        const prefix = selectedStds.size > 1 ? '📜 ' : '';
+        const label = n>1?`${prefix}${eq.short} ${i}`:`${prefix}${eq.short}`;
         addTab(tabId,label,tabsBar,tabsContent,buildOldEquipmentTab(eq,i,globalEquipCounter));
       }
     });
-    addTab('old_checks','רשימת תיוג',tabsBar,tabsContent,buildOldChecksTab());
-    addTab('old_extras','תוספות נת"מ',tabsBar,tabsContent,buildOldExtrasTab());
-    addTab('old_findings','פירוט ממצאים',tabsBar,tabsContent,buildOldFindingsTab());
-  } else {
-    // Mixed: new + old standard
-    // Site checks (new std)
-    addTab('site','א. האתר',tabsBar,tabsContent,buildSiteTab());
-    
-    // New standard equipment tabs
-    let hasNew = false;
-    EQUIPMENT_TYPES.forEach(eq => {
+  }
+
+  // ת"י 1497 fitness equipment tabs
+  if (selectedStds.has('fitness')) {
+    FITNESS_EQUIPMENT_TYPES.forEach(eq => {
       const n = counts[eq.id]||0;
       for (let i=1;i<=n;i++) {
-        hasNew = true;
         globalEquipCounter++;
-        const tabId=`${eq.id}_${i}`;
-        const label = n>1?`${eq.short} ${i}`:eq.short;
-        addTab(tabId,'🆕 '+label,tabsBar,tabsContent,buildEquipmentTab(eq,i,globalEquipCounter));
+        const tabId=`fit_${eq.id}_${i}`;
+        const prefix = selectedStds.size > 1 ? '💪 ' : '';
+        const label = n>1?`${prefix}${eq.short} ${i}`:`${prefix}${eq.short}`;
+        addTab(tabId,label,tabsBar,tabsContent,buildFitnessEquipmentTab(eq,i,globalEquipCounter));
       }
     });
-    
-    // Old standard equipment tabs
-    let hasOld = false;
-    OLD_EQUIPMENT_TYPES.forEach(eq => {
-      const n = counts[eq.id]||0;
-      for (let i=1;i<=n;i++) {
-        hasOld = true;
-        globalEquipCounter++;
-        const tabId=`${eq.id}_${i}`;
-        const label = n>1?`${eq.short} ${i}`:eq.short;
-        addTab(tabId,'📜 '+label,tabsBar,tabsContent,buildOldEquipmentTab(eq,i,globalEquipCounter));
-      }
-    });
-    
-    // Maintenance (new std)
+  }
+
+  // Maintenance tab (1498 new/old)
+  if (selectedStds.has('new')) {
     addTab('maint','ח. תחזוקה',tabsBar,tabsContent,buildMaintenanceTab());
-    
-    // Old standard specific tabs if any old equipment selected
-    if (hasOld) {
-      addTab('old_checks','📜 רשימת תיוג (ישן)',tabsBar,tabsContent,buildOldChecksTab());
-      addTab('old_extras','📜 תוספות נת"מ',tabsBar,tabsContent,buildOldExtrasTab());
-      addTab('old_findings','📜 ממצאים (ישן)',tabsBar,tabsContent,buildOldFindingsTab());
-    }
+  }
+
+  // Old standard checklist tabs
+  if (selectedStds.has('old')) {
+    const pfx = selectedStds.size > 1 ? '📜 ' : '';
+    addTab('old_checks',pfx+'רשימת תיוג',tabsBar,tabsContent,buildOldChecksTab());
+    addTab('old_extras',pfx+'תוספות נת"מ',tabsBar,tabsContent,buildOldExtrasTab());
+    addTab('old_findings',pfx+'ממצאים (ישן)',tabsBar,tabsContent,buildOldFindingsTab());
+  }
+
+  // Fitness findings tab
+  if (selectedStds.has('fitness')) {
+    const pfx = selectedStds.size > 1 ? '💪 ' : '';
+    addTab('fit_findings',pfx+'ממצאים כושר',tabsBar,tabsContent,buildFitnessFindingsTab());
   }
 
   addTab('summary','📊 סיכום',tabsBar,tabsContent,buildSummaryTab());
@@ -507,7 +624,7 @@ function buildGeneralTab() {
       ${fld('מזג אוויר','gen_weather','text',d('s_weather'))}
       ${fld('מס׳ ביקור/הזמנה','gen_order','text','')}
       ${fld('סוג הבדיקה','gen_insp_type','text',getInspLabel())}
-      ${fldF('מהדורת תקן','gen_std','text',selectedStd==='new'?'תקן 2006+':'תקן לפני 2006')}
+      ${fldF('מהדורת תקן','gen_std','text',[...selectedStds].map(s=>s==='new'?'ת"י 1498 לאחר 2006':s==='old'?'ת"י 1498 לפני 2006':'ת"י 1497 כושר').join(' + '))}
     </div>
   </div>
   <div class="info-card">
@@ -925,6 +1042,192 @@ function buildOldFindingsTab(){
   </div>`;
 }
 
+// ===== ת"י 1497 FITNESS TABS =====
+function buildFitnessSiteTab() {
+  const d=(id)=>document.getElementById(id)?.value||'';
+  return `
+  <div class="info-card">
+    <h3>פרטי האתר — ת"י 1497 מתקני כושר</h3>
+    <div class="form-grid">
+      ${fld('שנת הקמת האתר','fit_site_year','text','')}
+      ${fld('מרחק מאזור משחקים','fit_site_dist','text','')}
+      ${fldF('סוג מיקום','fit_site_type','text','פארק ציבורי / גן שכונתי / אחר')}
+      ${fldF('כיסוי שטח','fit_site_surface','text','אספלט / אבני מדרכה / דשא / חצץ / אחר')}
+    </div>
+  </div>
+  <div class="info-card">
+    <h3>תמונות האתר</h3>
+    <div class="image-upload-area">
+      <input type="file" accept="image/*" multiple onchange="handleImages(this,'fit_site_imgs')">
+      <div class="upload-icon">📸</div><p>תמונות כלל האתר, שילוט, גישה</p>
+    </div>
+    <div class="image-preview-grid" id="fit_site_imgs"></div>
+  </div>
+  <div class="section-card">
+    <div class="section-card-header" onclick="toggleSection(this)">
+      <h3>💪 בדיקות האתר — ת"י 1497 + בחינה מורחבת</h3>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-card-body">
+      <table class="old-std-table" dir="rtl">
+        <thead><tr>
+          <th style="width:22%">נושא</th><th style="width:28%">הנבדק</th>
+          <th style="width:8%">סעיף</th>
+          <th style="width:18%">מתאים<br>במתקנים מס׳</th>
+          <th style="width:18%">לא מתאים<br>במתקנים מס׳</th>
+          <th style="width:6%">ראה הערה</th>
+        </tr></thead>
+        <tbody>
+          ${FITNESS_SITE_CHECKS_1497.map((item,i)=>{
+            if(item.type==='subheader') return `<tr class="subheader-row"><td colspan="6">${item.text}</td></tr>`;
+            const uid=`fit_site_${i}`;
+            return `<tr class="check-row">
+              <td class="topic-cell">${item.topic}</td>
+              <td class="subtopic-cell">${item.subtopic}</td>
+              <td class="std-ref">${item.std_ref}</td>
+              <td><input type="text" placeholder="מתקנים" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:11px;width:90%;outline:none;font-family:Heebo,sans-serif"></td>
+              <td><input type="text" placeholder="מתקנים" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:11px;width:90%;outline:none;font-family:Heebo,sans-serif"></td>
+              <td><input type="text" placeholder="מס׳" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:11px;width:90%;outline:none;font-family:Heebo,sans-serif"></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function buildFitnessEquipmentTab(eq, n, globalNum) {
+  const prefix = `${eq.id}_${n}`;
+  const dispNum = globalNum || n;
+  
+  const checkRows = FITNESS_CHECKLIST_1497.map((item,i)=>{
+    if(item.type==='subheader') return `<tr class="subheader-row"><td colspan="6">${item.text}</td></tr>`;
+    if(item.type==='notes') return `<tr class="notes-row"><td colspan="6"><span>הערות:</span><input type="text" class="notes-input" placeholder="הזן הערות..."></td></tr>`;
+    if(item.type==='equip_details') return ''; // handled in header card
+    if(item.type==='item'){
+      const uid=`${prefix}_${item.num}`;
+      return `<tr class="check-row severe-row">
+        <td class="num-cell" style="font-size:11px;font-weight:700">${item.num}</td>
+        <td class="desc-cell" style="font-weight:600">${item.topic}</td>
+        <td class="desc-cell" style="font-size:11px;color:var(--text-light)">${item.subtopic}</td>
+        <td class="std-cell">${item.std_ref}</td>
+        <td style="text-align:center;white-space:nowrap">
+          <label style="display:flex;align-items:center;gap:2px;font-size:10px;justify-content:center"><input type="radio" name="${uid}" value="ok"> מתאים</label>
+          <label style="display:flex;align-items:center;gap:2px;font-size:10px;justify-content:center"><input type="radio" name="${uid}" value="fail"> לא מתאים</label>
+        </td>
+        <td style="padding:4px 6px;width:110px">
+          <input type="text" placeholder="הערה מס׳" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:10px;width:100%;outline:none;font-family:Heebo,sans-serif">
+        </td>
+      </tr>`;
+    }
+    return '';
+  }).join('');
+
+  return `
+  <div class="equipment-tab-header">
+    <div class="eq-icon-big">💪</div>
+    <div><h2>${eq.label} — מתקן מס׳ ${dispNum}</h2><p>ת"י 1497 | מתקני כושר | ${getInspLabel()}</p></div>
+  </div>
+  <div class="equipment-info-card">
+    <h4>📋 תיאור טכני של המתקן</h4>
+    <div class="info-grid">
+      ${fld('שם/מספר מתקן',`${prefix}_name`,'text','')}
+      ${fld('יצרן',`${prefix}_mfr`,'text','')}
+      ${fld('מק"ט',`${prefix}_sku`,'text','')}
+      ${fld('מיקום באתר',`${prefix}_loc`,'text','')}
+    </div>
+    <div class="info-grid" style="margin-top:8px">
+      ${fld('קוטר עמוד ראשי / מידות פרופיל',`${prefix}_col_diam`,'text','')}
+      ${fld('עובי דופן עמוד/פרופיל',`${prefix}_col_wall`,'text','')}
+      ${fld('קוטר צינורות נושאי עומס דינמי',`${prefix}_dyn_diam`,'text','')}
+      ${fld('עובי דופן צינורות דינמיים',`${prefix}_dyn_wall`,'text','')}
+    </div>
+    <div class="form-group" style="margin-top:8px">
+      <label>חומר אמצעי הגנה למנגנונים</label>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px">
+        ${['פלסטיק','מתכת','פיברגלס','אחר'].map(v=>`<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer"><input type="radio" name="${prefix}_guard_mat" value="${v}"> ${v}</label>`).join('')}
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:8px">
+      <label>מצב כללי ראשוני</label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${['תקין','סביר','לקוי','מסוכן'].map(v=>`<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer"><input type="radio" name="${prefix}_cond" value="${v}"> ${v}</label>`).join('')}
+      </div>
+    </div>
+    <div class="form-group" style="margin:8px 0">
+      <label>תיאור כללי</label>
+      <textarea rows="2" id="${prefix}_desc" style="border:1.5px solid var(--border);border-radius:6px;padding:7px;font-family:Heebo,sans-serif;font-size:12px;width:100%;outline:none;resize:vertical" placeholder="תאר את המתקן..."></textarea>
+    </div>
+    <h4 style="margin-bottom:6px">📷 תמונות המתקן</h4>
+    <div class="image-upload-area">
+      <input type="file" accept="image/*" multiple onchange="handleImages(this,'${prefix}_preview')">
+      <div class="upload-icon">📸</div><p>הוסף תמונות מתקן</p>
+    </div>
+    <div class="image-preview-grid" id="${prefix}_preview"></div>
+  </div>
+  <div class="section-card">
+    <div class="section-card-header" onclick="toggleSection(this)">
+      <h3>💪 רשימת תיוג — ${eq.label} מס׳ ${dispNum} — ת"י 1497</h3>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-card-body">
+      <table class="old-std-table" dir="rtl">
+        <thead><tr>
+          <th style="width:5%">#</th>
+          <th style="width:18%">נושא</th>
+          <th style="width:35%">הנבדק</th>
+          <th style="width:8%">סעיף</th>
+          <th style="width:18%">תוצאה</th>
+          <th style="width:16%">הערה</th>
+        </tr></thead>
+        <tbody>${checkRows}</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="findings-section">
+    <h4>📌 ממצאים — ${eq.short} ${n}</h4>
+    <div id="${prefix}_findings"></div>
+    <button class="add-finding-btn" onclick="addFinding('${prefix}')">+ הוסף ממצא</button>
+  </div>`;
+}
+
+function buildFitnessFindingsTab() {
+  return `
+  <div class="info-card">
+    <h3>פירוט הערות לאי ההתאמה — ת"י 1497</h3>
+    <p style="font-size:11px;color:var(--text-light);margin-bottom:10px">מלא שורה עבור כל ממצא שדורש תיקון</p>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr>
+          <th style="background:#f0f4f8;padding:7px 6px;text-align:center;font-size:11px;font-weight:700;color:var(--text-light);border-bottom:1.5px solid var(--border);width:5%">הערה<br>מס׳</th>
+          <th style="background:#f0f4f8;padding:7px 6px;text-align:right;font-size:11px;font-weight:700;color:var(--text-light);border-bottom:1.5px solid var(--border);width:8%">מס׳<br>מתקן</th>
+          <th style="background:#f0f4f8;padding:7px 6px;text-align:right;font-size:11px;font-weight:700;color:var(--text-light);border-bottom:1.5px solid var(--border)">פרוט הממצא</th>
+          <th style="background:#f0f4f8;padding:7px 5px;text-align:center;font-size:11px;font-weight:700;color:var(--text-light);border-bottom:1.5px solid var(--border);width:8%">חלק</th>
+          <th style="background:#f0f4f8;padding:7px 5px;text-align:center;font-size:11px;font-weight:700;color:var(--text-light);border-bottom:1.5px solid var(--border);width:8%">סעיף</th>
+          <th style="background:#f0f4f8;padding:7px 5px;text-align:center;font-size:10px;color:var(--danger);font-weight:700;border-bottom:1.5px solid var(--border);width:6%">קריטי</th>
+          <th style="background:#f0f4f8;padding:7px 5px;text-align:center;font-size:10px;color:var(--warning);font-weight:700;border-bottom:1.5px solid var(--border);width:6%">חמור</th>
+          <th style="background:#f0f4f8;padding:7px 5px;text-align:center;font-size:10px;color:#b8860b;font-weight:700;border-bottom:1.5px solid var(--border);width:6%">קל</th>
+          <th style="background:#f0f4f8;padding:7px 5px;text-align:center;font-size:10px;font-weight:700;color:var(--ok);border-bottom:1.5px solid var(--border);width:8%">תוקן<br>במקום</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${Array.from({length:25},(_,i)=>`
+        <tr>
+          <td style="padding:5px;border-bottom:1px solid #eef0f3;text-align:center;font-size:11px;color:var(--text-light)">${i+1}</td>
+          <td style="padding:5px;border-bottom:1px solid #eef0f3"><input type="text" style="border:none;background:transparent;font-family:Heebo,sans-serif;font-size:11px;width:90%;outline:none;text-align:center"></td>
+          <td style="padding:5px;border-bottom:1px solid #eef0f3"><input type="text" style="border:none;background:transparent;font-family:Heebo,sans-serif;font-size:11px;width:100%;outline:none" placeholder="פירוט..."></td>
+          <td style="padding:5px;border-bottom:1px solid #eef0f3"><input type="text" style="border:none;background:transparent;font-family:Heebo,sans-serif;font-size:11px;width:90%;outline:none;text-align:center"></td>
+          <td style="padding:5px;border-bottom:1px solid #eef0f3"><input type="text" style="border:none;background:transparent;font-family:Heebo,sans-serif;font-size:11px;width:90%;outline:none;text-align:center"></td>
+          <td style="padding:5px;border-bottom:1px solid #eef0f3;text-align:center"><input type="checkbox"></td>
+          <td style="padding:5px;border-bottom:1px solid #eef0f3;text-align:center"><input type="checkbox"></td>
+          <td style="padding:5px;border-bottom:1px solid #eef0f3;text-align:center"><input type="checkbox"></td>
+          <td style="padding:5px;border-bottom:1px solid #eef0f3;text-align:center"><input type="checkbox"></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
 // ===== RENDER CHECKLIST ROWS (new std with filter) =====
 function renderRows(items, prefix) {
   return items.map(item=>{
@@ -1067,9 +1370,10 @@ function calcSummary(){
 }
 
 // Init
-buildSetupGrid();
 document.getElementById('s_date').value=new Date().toISOString().split('T')[0];
-selectStd('new');
+// Default: select ת"י 1498 לאחר 2006
+document.getElementById('std_new').checked = true;
+onStdChange();
 </script>
 </body>
 </html>
