@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>טופס בדיקת בטיחות מגרש משחקים — ת״י 1498</title>
+<title>טופס בדיקת בטיחות מגרש משחקים — ת״י 1498 | V11</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap');
   :root {
@@ -197,14 +197,163 @@
   @media (max-width:700px) { .mixed-columns { grid-template-columns:1fr; } }
   .mixed-col {}
   @media print {
-    .form-topbar, .tabs-bar { display:none !important; }
-    .tab-content { display:block !important; padding:8px; }
-    body { background:white; }
+    @page {
+      margin: 10mm 10mm 10mm 10mm;
+      /* Removing browser-added URL/date headers and footers */
+    }
+    /* Hide ALL UI chrome — only PDF content prints */
+    .form-topbar, .tabs-bar, .add-finding-btn, .remove-finding,
+    .remove-img, .image-upload-area, .section-card-header .toggle-icon,
+    #tab_pdf_preview, .pdf-print-btn { display:none !important; }
+
+    /* Hide main-form entirely, show only PDF tab content */
+    #main-form { display:block !important; }
+    .tab-content { display:none !important; padding:0; }
+    #content_pdf_preview { display:block !important; }
+    body { background:white; font-size:11pt; color:#000; }
     .section-card-body.collapsed { display:block !important; }
     #setup-screen { display:none !important; }
-    #main-form { display:block !important; }
     .hidden-row { display:none !important; }
+
+    /* Prevent right-border clipping at page breaks */
+    .pdf-eq-block { overflow:visible !important; border-radius:0 !important; }
+    .pdf-finding { box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+    .check-row.critical-row, .check-row.severe-row, .check-row.minor-row {
+      border-right-width:3px !important;
+    }
+
+    /* Page breaks */
+    .pdf-section { page-break-inside:avoid; margin-bottom:16pt; }
+    .pdf-page-break { page-break-before:always; }
+    h2.pdf-section-title { font-size:13pt; border-bottom:2pt solid #1a3a5c;
+      color:#1a3a5c; padding-bottom:4pt; margin-bottom:8pt; }
+
+    /* Tables */
+    table { border-collapse:collapse; width:100%; font-size:9pt; }
+    th { background:#e8eef5 !important; -webkit-print-color-adjust:exact;
+         print-color-adjust:exact; }
+    td, th { border:0.5pt solid #bbb; padding:3pt 5pt; }
+
+    /* Symbol cells */
+    .pdf-sym { text-align:center; font-size:12pt; width:22pt; }
+
+    /* Images grid in print */
+    .print-img-grid { display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(120pt,1fr));
+      gap:6pt; margin:6pt 0; }
+    .print-img-grid img { width:100%; height:90pt; object-fit:cover;
+      border:0.5pt solid #ccc; border-radius:3pt; }
+
+    /* Finding cards */
+    .print-finding { border:0.5pt solid #bbb; border-radius:3pt;
+      padding:6pt 8pt; margin-bottom:6pt; page-break-inside:avoid; }
+    .print-finding-title { font-weight:700; font-size:10pt;
+      color:#1a3a5c; margin-bottom:4pt; }
   }
+  /* Radio symbol buttons */
+  .row-radios { display:flex; gap:3px; align-items:center; justify-content:flex-start; flex-wrap:nowrap; }
+  .radio-sym-btn { cursor:pointer; }
+  .rsb-inner { display:inline-block; padding:3px 8px; border-radius:4px; font-size:11px;
+    font-weight:700; border:1.5px solid #d0d7e0; background:#f5f7fa; color:#888;
+    transition:all 0.12s; white-space:nowrap; user-select:none; min-width:32px; text-align:center; }
+  .rsb-inner:hover { border-color:#999; background:#eee; }
+  .rsb-ok.rsb-selected    { background:#27ae60; border-color:#27ae60; color:white; }
+  .rsb-minor.rsb-selected  { background:#d4ac0d; border-color:#d4ac0d; color:white; }
+  .rsb-severe.rsb-selected { background:#e67e22; border-color:#e67e22; color:white; }
+  .rsb-critical.rsb-selected { background:#c0392b; border-color:#c0392b; color:white; }
+  .rsb-na.rsb-selected    { background:#aaa; border-color:#aaa; color:white; }
+
+  /* Checklist table — fixed columns, aligned */
+  .checklist-table { width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed; }
+  .checklist-table thead tr { background:#f0f4f8; }
+  .checklist-table th { padding:7px 6px; text-align:center; font-weight:700;
+    font-size:11px; color:var(--text-light); border-bottom:1.5px solid var(--border); }
+  .checklist-table th.th-num  { width:36px; }
+  .checklist-table th.th-sev  { width:30px; }
+  .checklist-table th.th-desc { text-align:right; padding-right:8px; }
+  .checklist-table th.th-std  { width:90px; }
+  .checklist-table th.th-btns { width:210px; text-align:center; }
+  .check-row td { padding:5px 6px; border-bottom:1px solid #eef0f3; vertical-align:middle; }
+  .check-row:hover { background:#f8fafe; }
+  .check-row.critical-row { border-right:3px solid var(--danger); }
+  .check-row.severe-row   { border-right:3px solid var(--warning); }
+  .check-row.minor-row    { border-right:3px solid #d4ac0d; }
+  .num-cell  { text-align:center; font-weight:600; font-size:10px; color:var(--text-light); }
+  .sev-cell  { text-align:center; font-size:13px; }
+  .desc-cell { text-align:right; padding-right:8px !important; }
+  .std-cell  { font-size:10px; color:var(--text-light); text-align:center; }
+  .radio-cell { text-align:center; vertical-align:middle; }
+  .subheader-row td { background:#e8eef5; padding:6px 10px; font-weight:700;
+    font-size:11px; color:var(--primary); border-bottom:1px solid var(--border); }
+  .notes-row td { padding:5px 8px; background:#fefdf8; }
+  .notes-row span { font-size:10px; font-weight:700; color:var(--text-light); margin-left:6px; }
+  .notes-input { width:calc(100% - 44px); border:1px solid var(--border); border-radius:4px;
+    padding:3px 7px; font-family:'Heebo',sans-serif; font-size:11px; outline:none; }
+  .hidden-row { display:none; }
+
+</style>
+<style>
+  /* ===== PDF PREVIEW TAB ===== */ { background:#fff; max-width:800px; margin:0 auto;
+    padding:20px; font-size:12px; color:#111; }
+  .pdf-doc-header { border-bottom:3px solid #1a3a5c; padding-bottom:12px;
+    margin-bottom:18px; }
+  .pdf-doc-header h1 { font-size:17px; font-weight:800; color:#1a3a5c; }
+  .pdf-doc-header .pdf-meta { display:grid; grid-template-columns:1fr 1fr;
+    gap:4px 16px; margin-top:8px; font-size:11px; }
+  .pdf-doc-header .pdf-meta span { color:#444; }
+  .pdf-doc-header .pdf-meta strong { color:#111; }
+  .pdf-section-title { font-size:13px; font-weight:800; color:#1a3a5c;
+    border-bottom:2px solid #1a3a5c; padding-bottom:4px; margin:16px 0 8px; }
+  .pdf-sub-title { font-size:11px; font-weight:700; color:#2d5f8a;
+    border-bottom:1px solid #b8d9f5; padding-bottom:3px; margin:10px 0 5px; }
+  .pdf-table { width:100%; border-collapse:collapse; font-size:11px;
+    margin-bottom:10px; }
+  .pdf-table th { background:#e8eef5; padding:5px 7px; text-align:right;
+    font-weight:700; font-size:10px; color:#444;
+    border:0.5px solid #bbb; }
+  .pdf-table td { padding:4px 7px; border:0.5px solid #ddd;
+    vertical-align:middle; }
+  .pdf-table tr:nth-child(even) td { background:#fafbfc; }
+  .pdf-table .subhdr td { background:#dde6f0; font-weight:700;
+    color:#1a3a5c; font-size:10px; }
+  .pdf-sym { text-align:center; width:24px; font-size:13px; }
+  .pdf-sym-ok  { color:#27ae60; }
+  .pdf-sym-fail { color:#c0392b; }
+  .pdf-sym-na  { color:#888; }
+  .pdf-eq-header { background:#1a3a5c; color:white; padding:6px 10px;
+    border-radius:5px 5px 0 0; font-weight:700; font-size:12px;
+    margin-bottom:0; display:flex; align-items:center; gap:8px; }
+  .pdf-eq-block { border:1px solid #bbb; border-radius:5px;
+    margin-bottom:14px; overflow:visible; }
+  .pdf-eq-details { display:grid; grid-template-columns:1fr 1fr 1fr;
+    gap:4px 10px; padding:8px 10px; font-size:11px;
+    background:#f5f7fa; border-bottom:1px solid #ddd; }
+  .pdf-eq-detail-item { display:flex; flex-direction:column; gap:1px; }
+  .pdf-eq-detail-item span:first-child { font-size:9px; color:#888;
+    font-weight:700; text-transform:uppercase; }
+  .pdf-img-grid { display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+    gap:8px; padding:10px; background:#f9f9f9;
+    border-bottom:1px solid #ddd; }
+  .pdf-img-grid img { width:100%; height:150px; object-fit:cover;
+    border-radius:4px; border:0.5px solid #ccc; }
+  .pdf-finding { border-right:3px solid #e67e22; padding:6px 10px;
+    margin-bottom:6px; background:#fff8f0; border-radius:0 4px 4px 0; }
+  .pdf-finding.critical { border-color:#c0392b; background:#fff5f5; }
+  .pdf-finding.minor { border-color:#d4ac0d; background:#fffef0; }
+  .pdf-finding-title { font-weight:700; font-size:11px; margin-bottom:3px; }
+  .pdf-finding-desc { font-size:11px; color:#333; }
+  .pdf-finding-meta { font-size:10px; color:#666; margin-top:3px; }
+  .pdf-finding-img { margin-top:5px; }
+  .pdf-finding-img img { height:120px; border-radius:3px;
+    border:0.5px solid #ccc; margin-left:4px; }
+  .pdf-print-btn { position:sticky; top:50px; float:left;
+    margin-bottom:10px; z-index:50; }
+  .pdf-print-btn button { padding:10px 20px; background:#1a3a5c;
+    color:white; border:none; border-radius:8px;
+    font-family:Heebo,sans-serif; font-size:14px; font-weight:700;
+    cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.2); }
+  .pdf-print-btn button:hover { background:#2d5f8a; }
 </style>
 </head>
 <body>
@@ -282,7 +431,10 @@
     <h1 id="topbar-title">טופס בדיקת בטיחות — ת״י 1498</h1>
     <div class="topbar-actions">
       <button class="topbar-btn" onclick="backToSetup()">◀ חזור</button>
-      <button class="topbar-btn" onclick="window.print()">🖨️ הדפס/PDF</button>
+      <button class="topbar-btn" onclick="saveDraft()" title="שמור טיוטה לקובץ">💾 שמור טיוטה</button>
+      <button class="topbar-btn" onclick="document.getElementById('load-draft-input').click()" title="טען טיוטה שמורה">📂 טען טיוטה</button>
+      <input type="file" id="load-draft-input" accept=".json" style="display:none" onchange="loadDraft(this)">
+      <button class="topbar-btn" onclick="printWithPdf()">🖨️ הדפס/PDF</button>
       <button class="topbar-btn accent" onclick="switchTab('summary')">📋 סיכום</button>
     </div>
   </div>
@@ -573,21 +725,11 @@ function generateForm() {
     addTab('maint','ח. תחזוקה',tabsBar,tabsContent,buildMaintenanceTab());
   }
 
-  // Old standard checklist tabs
-  if (selectedStds.has('old')) {
-    const pfx = selectedStds.size > 1 ? '📜 ' : '';
-    addTab('old_checks',pfx+'רשימת תיוג',tabsBar,tabsContent,buildOldChecksTab());
-    addTab('old_extras',pfx+'תוספות נת"מ',tabsBar,tabsContent,buildOldExtrasTab());
-    addTab('old_findings',pfx+'ממצאים (ישן)',tabsBar,tabsContent,buildOldFindingsTab());
-  }
-
-  // Fitness findings tab
-  if (selectedStds.has('fitness')) {
-    const pfx = selectedStds.size > 1 ? '💪 ' : '';
-    addTab('fit_findings',pfx+'ממצאים כושר',tabsBar,tabsContent,buildFitnessFindingsTab());
-  }
+  // Old standard checklist tabs — REMOVED (checks are per-equipment, findings per-equipment)
+  // Fitness findings tab — REMOVED (findings are per-equipment)
 
   addTab('summary','📊 סיכום',tabsBar,tabsContent,buildSummaryTab());
+  addTab('pdf_preview','📄 ייצוא PDF',tabsBar,tabsContent,'<div id="pdf_preview_placeholder" style="padding:30px;text-align:center;color:var(--text-light)"><p style="font-size:14px;margin-bottom:12px">לחץ על הכפתור לעדכון תצוגת ה-PDF לפני ייצוא</p><button onclick="buildAndShowPdf()" style="padding:12px 28px;background:var(--primary);color:white;border:none;border-radius:8px;font-family:Heebo,sans-serif;font-size:14px;font-weight:700;cursor:pointer">🔄 הכן תצוגת PDF</button></div>');
   switchTab('general');
   document.getElementById('setup-screen').style.display='none';
   document.getElementById('main-form').style.display='block';
@@ -658,15 +800,15 @@ function buildGeneralTab() {
   <div class="info-card">
     <h3>נוכחים בזמן הבדיקה</h3>
     <table class="attendees-table"><thead><tr><th>שם</th><th>תפקיד</th><th>חתימה</th></tr></thead><tbody>
-    ${[1,2,3].map(i=>`<tr><td><input type="text" placeholder="שם"></td><td><input type="text" placeholder="תפקיד"></td><td><input type="text" placeholder="חתימה"></td></tr>`).join('')}
+    ${[1,2,3].map(i=>`<tr><td><input type="text" id="att_name_${i}" placeholder="שם"></td><td><input type="text" id="att_role_${i}" placeholder="תפקיד"></td><td><input type="text" id="att_sign_${i}" placeholder="חתימה"></td></tr>`).join('')}
     </tbody></table>
   </div>
   <div class="info-card">
     <h3>מסמכים שנסקרו</h3>
     <table class="doc-table"><thead><tr><th>#</th><th>שם המסמך</th><th>תאריך</th><th>הוצא ע״י</th><th>קיים</th></tr></thead><tbody>
     ${['בדיקה שנתית קודמת','תעודות בדיקת הולם EN 1177','הוראות יצרן / מפרט טכני','יומן תחזוקה','אישור התקנה'].map((doc,i)=>`
-    <tr><td style="text-align:center;color:var(--text-light);font-size:10px">${i+1}</td><td>${doc}</td><td><input type="date" style="font-size:11px"></td><td><input type="text" style="font-size:11px" placeholder="מוציא"></td><td style="text-align:center"><input type="checkbox"></td></tr>`).join('')}
-    <tr><td style="text-align:center;color:var(--text-light);font-size:10px">6</td><td><input type="text" placeholder="אחר..."></td><td><input type="date" style="font-size:11px"></td><td><input type="text" style="font-size:11px"></td><td style="text-align:center"><input type="checkbox"></td></tr>
+    <tr><td style="text-align:center;color:var(--text-light);font-size:10px">${i+1}</td><td>${doc}</td><td><input type="date" id="doc_date_${i}" style="font-size:11px"></td><td><input type="text" id="doc_by_${i}" style="font-size:11px" placeholder="מוציא"></td><td style="text-align:center"><input type="checkbox" id="doc_exist_${i}"></td></tr>`).join('')}
+    <tr><td style="text-align:center;color:var(--text-light);font-size:10px">6</td><td><input type="text" id="doc_name_5" placeholder="אחר..."></td><td><input type="date" id="doc_date_5" style="font-size:11px"></td><td><input type="text" id="doc_by_5" style="font-size:11px"></td><td style="text-align:center"><input type="checkbox" id="doc_exist_5"></td></tr>
     </tbody></table>
   </div>`;
 }
@@ -688,7 +830,13 @@ function buildSiteTab() {
     </div>
     <div class="section-card-body">
       <table class="checklist-table" dir="rtl">
-        <thead><tr><th>מס׳</th><th>חו׳</th><th class="desc-th">פריט לבדיקה</th><th>סעיף</th><th title="תקין">✅</th><th title="ליקוי קל">🟡</th><th title="ליקוי חמור">🟠</th><th title="ליקוי קריטי">🔴</th><th title="לא רלוונטי">—</th></tr></thead>
+        <thead><tr>
+          <th class="th-num">מס׳</th>
+          <th class="th-sev">חו׳</th>
+          <th class="th-desc" colspan="2">פריט לבדיקה</th>
+          <th class="th-std">סעיף</th>
+          <th class="th-btns">✔ &nbsp; קל &nbsp; חמור &nbsp; קריטי &nbsp; —</th>
+        </tr></thead>
         <tbody>${renderRows(SITE_CHECKS,'site')}</tbody>
       </table>
     </div>
@@ -707,7 +855,13 @@ function buildEquipmentTab(eq,n,globalNum) {
       sectHtml+=`<div class="section-card" style="margin-bottom:10px">
         <div class="section-card-header" onclick="toggleSection(this)"><h3>${curSection}</h3><span class="toggle-icon">▼</span></div>
         <div class="section-card-body"><table class="checklist-table" dir="rtl">
-          <thead><tr><th>מס׳</th><th>חו׳</th><th class="desc-th">פריט לבדיקה</th><th>סעיף</th><th title="תקין">✅</th><th title="ליקוי קל">🟡</th><th title="ליקוי חמור">🟠</th><th title="ליקוי קריטי">🔴</th><th title="לא רלוונטי">—</th></tr></thead>
+          <thead><tr>
+            <th class="th-num">מס׳</th>
+            <th class="th-sev">חו׳</th>
+            <th class="th-desc" colspan="2">פריט לבדיקה</th>
+            <th class="th-std">סעיף</th>
+            <th class="th-btns">✔ &nbsp; קל &nbsp; חמור &nbsp; קריטי &nbsp; —</th>
+          </tr></thead>
           <tbody>${renderRows(curItems,prefix)}</tbody>
         </table></div></div>`;
       curItems=[];
@@ -766,7 +920,13 @@ function buildMaintenanceTab() {
     </div>
     <div class="section-card-body">
       <table class="checklist-table" dir="rtl">
-        <thead><tr><th>מס׳</th><th>חו׳</th><th class="desc-th">פריט לבדיקה</th><th>סעיף</th><th title="תקין">✅</th><th title="ליקוי קל">🟡</th><th title="ליקוי חמור">🟠</th><th title="ליקוי קריטי">🔴</th><th title="לא רלוונטי">—</th></tr></thead>
+        <thead><tr>
+          <th class="th-num">מס׳</th>
+          <th class="th-sev">חו׳</th>
+          <th class="th-desc" colspan="2">פריט לבדיקה</th>
+          <th class="th-std">סעיף</th>
+          <th class="th-btns">✔ &nbsp; קל &nbsp; חמור &nbsp; קריטי &nbsp; —</th>
+        </tr></thead>
         <tbody>${renderRows(MAINT_CHECKS,'maint')}</tbody>
       </table>
     </div>
@@ -811,7 +971,7 @@ function buildOldEquipmentTab(eq,n,globalNum){
   const dispNum = globalNum || n;
   const checklist = OLD_STD_CHECKLISTS[eq.id] || [];
   
-  // Build checklist HTML
+  // Build checklist HTML — new button format ✔/קל/חמור/קריטי/—
   let checkHtml = '';
   checklist.forEach((item,idx) => {
     if(item.type === 'subheader') {
@@ -820,22 +980,19 @@ function buildOldEquipmentTab(eq,n,globalNum){
       checkHtml += `<tr class="notes-row"><td colspan="6"><span>הערות:</span><input type="text" class="notes-input" placeholder="הזן הערות..."></td></tr>`;
     } else if(item.type === 'item') {
       const uid = `${prefix}_${item.num}`;
-      checkHtml += `<tr class="check-row severe-row">
-        <td class="num-cell" style="font-size:11px;font-weight:700">${item.num}</td>
+      const btnHtml = [
+        {val:'ok',label:'✔',cls:'rsb-ok'},
+        {val:'minor',label:'קל',cls:'rsb-minor'},
+        {val:'severe',label:'חמור',cls:'rsb-severe'},
+        {val:'critical',label:'קריטי',cls:'rsb-critical'},
+      ].map(b=>`<label class="radio-sym-btn"><input type="radio" name="${uid}" value="${b.val}" style="display:none" onchange="selectRowOption(this,'${uid}')"><span class="rsb-inner ${b.cls}">${b.label}</span></label>`).join('');
+      const naBtn = `<label class="radio-sym-btn" onclick="selectNa('${uid}')"><input type="radio" name="${uid}" value="na" style="display:none" checked><span class="rsb-inner rsb-na rsb-selected" id="na_span_${uid}">—</span></label>`;
+      checkHtml += `<tr class="check-row severe-row" data-uid="${uid}">
+        <td class="num-cell">${item.num}</td>
         <td class="desc-cell" style="font-weight:600">${item.topic}</td>
         <td class="desc-cell" style="font-size:11px;color:var(--text-light)">${item.subtopic}</td>
-        <td class="std-cell">${item.chapter ? 'חלק '+item.chapter+'<br>'+item.section : ''}</td>
-        <td style="text-align:center;width:80px">
-          <div style="display:flex;gap:3px;justify-content:center">
-            <label style="display:flex;align-items:center;gap:2px;font-size:10px;white-space:nowrap"><input type="radio" name="${uid}" value="ok"> מתאים</label>
-          </div>
-          <div style="display:flex;gap:3px;justify-content:center">
-            <label style="display:flex;align-items:center;gap:2px;font-size:10px;white-space:nowrap"><input type="radio" name="${uid}" value="fail"> לא מתאים</label>
-          </div>
-        </td>
-        <td style="padding:4px 6px;width:120px">
-          <input type="text" placeholder="הערה מס׳" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:10px;width:100%;outline:none;font-family:Heebo,sans-serif">
-        </td>
+        <td class="std-cell">${item.chapter ? 'חלק '+item.chapter+' §'+item.section : ''}</td>
+        <td class="radio-cell" colspan="2"><div class="row-radios">${btnHtml}${naBtn}</div></td>
       </tr>`;
     }
   });
@@ -870,20 +1027,18 @@ function buildOldEquipmentTab(eq,n,globalNum){
     </div>
     <div class="image-preview-grid" id="${prefix}_preview"></div>
   </div>
-  <div class="section-card">
+    <div class="section-card">
     <div class="section-card-header" onclick="toggleSection(this)">
-      <h3>רשימת תיוג — ${eq.label}</h3>
+      <h3>📜 רשימת תיוג — ${eq.label} — ת"י 1498 לפני 2006</h3>
       <span class="toggle-icon">▼</span>
     </div>
     <div class="section-card-body">
-      <table class="checklist-table" dir="rtl" style="font-size:12px">
+      <table class="checklist-table" dir="rtl">
         <thead><tr>
-          <th style="width:32px">מס׳</th>
-          <th style="text-align:right;padding-right:8px">נושא</th>
-          <th style="text-align:right;padding-right:8px">הנבדק</th>
-          <th style="width:80px">התקן</th>
-          <th style="width:110px">תוצאה</th>
-          <th style="width:100px">הערה</th>
+          <th class="th-num">מס׳</th>
+          <th class="th-desc" colspan="2" style="text-align:right;padding-right:8px">נושא / הנבדק</th>
+          <th class="th-std">סעיף</th>
+          <th class="th-btns">✔ &nbsp; קל &nbsp; חמור &nbsp; קריטי &nbsp; —</th>
         </tr></thead>
         <tbody>${checkHtml}</tbody>
       </table>
@@ -1103,21 +1258,22 @@ function buildFitnessEquipmentTab(eq, n, globalNum) {
   const checkRows = FITNESS_CHECKLIST_1497.map((item,i)=>{
     if(item.type==='subheader') return `<tr class="subheader-row"><td colspan="6">${item.text}</td></tr>`;
     if(item.type==='notes') return `<tr class="notes-row"><td colspan="6"><span>הערות:</span><input type="text" class="notes-input" placeholder="הזן הערות..."></td></tr>`;
-    if(item.type==='equip_details') return ''; // handled in header card
+    if(item.type==='equip_details') return '';
     if(item.type==='item'){
       const uid=`${prefix}_${item.num}`;
-      return `<tr class="check-row severe-row">
-        <td class="num-cell" style="font-size:11px;font-weight:700">${item.num}</td>
+      const btnHtml = [
+        {val:'ok',label:'✔',cls:'rsb-ok'},
+        {val:'minor',label:'קל',cls:'rsb-minor'},
+        {val:'severe',label:'חמור',cls:'rsb-severe'},
+        {val:'critical',label:'קריטי',cls:'rsb-critical'},
+      ].map(b=>`<label class="radio-sym-btn"><input type="radio" name="${uid}" value="${b.val}" style="display:none" onchange="selectRowOption(this,'${uid}')"><span class="rsb-inner ${b.cls}">${b.label}</span></label>`).join('');
+      const naBtn = `<label class="radio-sym-btn" onclick="selectNa('${uid}')"><input type="radio" name="${uid}" value="na" style="display:none" checked><span class="rsb-inner rsb-na rsb-selected" id="na_span_${uid}">—</span></label>`;
+      return `<tr class="check-row severe-row" data-uid="${uid}">
+        <td class="num-cell">${item.num}</td>
         <td class="desc-cell" style="font-weight:600">${item.topic}</td>
         <td class="desc-cell" style="font-size:11px;color:var(--text-light)">${item.subtopic}</td>
         <td class="std-cell">${item.std_ref}</td>
-        <td style="text-align:center;white-space:nowrap">
-          <label style="display:flex;align-items:center;gap:2px;font-size:10px;justify-content:center"><input type="radio" name="${uid}" value="ok"> מתאים</label>
-          <label style="display:flex;align-items:center;gap:2px;font-size:10px;justify-content:center"><input type="radio" name="${uid}" value="fail"> לא מתאים</label>
-        </td>
-        <td style="padding:4px 6px;width:110px">
-          <input type="text" placeholder="הערה מס׳" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:10px;width:100%;outline:none;font-family:Heebo,sans-serif">
-        </td>
+        <td class="radio-cell" colspan="2"><div class="row-radios">${btnHtml}${naBtn}</div></td>
       </tr>`;
     }
     return '';
@@ -1171,14 +1327,12 @@ function buildFitnessEquipmentTab(eq, n, globalNum) {
       <span class="toggle-icon">▼</span>
     </div>
     <div class="section-card-body">
-      <table class="old-std-table" dir="rtl">
+      <table class="checklist-table" dir="rtl">
         <thead><tr>
-          <th style="width:5%">#</th>
-          <th style="width:18%">נושא</th>
-          <th style="width:35%">הנבדק</th>
-          <th style="width:8%">סעיף</th>
-          <th style="width:18%">תוצאה</th>
-          <th style="width:16%">הערה</th>
+          <th class="th-num">מס׳</th>
+          <th class="th-desc" colspan="2" style="text-align:right;padding-right:8px">נושא / הנבדק</th>
+          <th class="th-std">סעיף</th>
+          <th class="th-btns">✔ &nbsp; קל &nbsp; חמור &nbsp; קריטי &nbsp; —</th>
         </tr></thead>
         <tbody>${checkRows}</tbody>
       </table>
@@ -1232,31 +1386,77 @@ function buildFitnessFindingsTab() {
 function renderRows(items, prefix) {
   return items.map(item=>{
     if(!item||!item.type) return '';
-    if(item.type==='subheader') return `<tr class="subheader-row"><td colspan="9">${item.text||''}</td></tr>`;
-    if(item.type==='notes') return `<tr class="notes-row"><td colspan="9"><span>הערות:</span><input type="text" class="notes-input" placeholder="הזן הערות..."></td></tr>`;
+    if(item.type==='subheader') return `<tr class="subheader-row"><td colspan="6">${item.text||''}</td></tr>`;
+    if(item.type==='notes') return `<tr class="notes-row"><td colspan="6"><span>הערות:</span><input type="text" class="notes-input" placeholder="הזן הערות..."></td></tr>`;
     if(item.type==='item'){
       const sev=item.severity||'🟠';
       const sevClass={'🔴':'critical','🟠':'severe','🟡':'minor'}[sev]||'severe';
       const uid=`${prefix}_${item.num}`;
-      // Filter by inspection type
       const itypes=item.insp_types||['acceptance'];
-      // acceptance shows ALL; others filter by insp_types
       const show = inspectionType === 'acceptance' || itypes.includes('all') || itypes.includes(inspectionType);
       const rowClass = show ? `check-row ${sevClass}-row` : `check-row ${sevClass}-row hidden-row`;
-      return `<tr class="${rowClass}" data-insp-types="${itypes.join(',')}">
+
+      // 4 visible buttons: ✔ קל חמור קריטי — plus hidden NA radio (default checked)
+      const btns = [
+        {val:'ok',      label:'✔',      cls:'rsb-ok'},
+        {val:'minor',   label:'קל',     cls:'rsb-minor'},
+        {val:'severe',  label:'חמור',   cls:'rsb-severe'},
+        {val:'critical',label:'קריטי',  cls:'rsb-critical'},
+      ];
+
+      const btnHtml = btns.map(b=>`
+        <label class="radio-sym-btn" title="${b.label}">
+          <input type="radio" name="${uid}" value="${b.val}" style="display:none"
+            onchange="selectRowOption(this,'${uid}')">
+          <span class="rsb-inner ${b.cls}">${b.label}</span>
+        </label>`).join('');
+
+      // NA is default — hidden radio pre-checked, shown as dash button
+      const naBtn = `
+        <label class="radio-sym-btn na-btn" id="na_btn_${uid}" title="לא רלוונטי" onclick="selectNa('${uid}')">
+          <input type="radio" name="${uid}" value="na" style="display:none" checked>
+          <span class="rsb-inner rsb-na rsb-selected" id="na_span_${uid}">—</span>
+        </label>`;
+
+      return `<tr class="${rowClass}" data-uid="${uid}" data-insp-types="${itypes.join(',')}">
         <td class="num-cell">${item.num||''}</td>
         <td class="sev-cell">${sev}</td>
-        <td class="desc-cell">${(item.desc||'').replace(/</g,'&lt;')}</td>
+        <td class="desc-cell" colspan="2">${(item.desc||'').replace(/</g,'&lt;')}</td>
         <td class="std-cell">${(item.std||'').replace(/</g,'&lt;')}</td>
-        <td class="radio-cell"><input type="radio" name="${uid}" value="ok"></td>
-        <td class="radio-cell"><input type="radio" name="${uid}" value="minor"></td>
-        <td class="radio-cell"><input type="radio" name="${uid}" value="severe"></td>
-        <td class="radio-cell"><input type="radio" name="${uid}" value="critical"></td>
-        <td class="radio-cell"><input type="radio" name="${uid}" value="na"${show?' checked':''}></td>
+        <td class="radio-cell">
+          <div class="row-radios">
+            ${btnHtml}
+            ${naBtn}
+          </div>
+        </td>
       </tr>`;
     }
     return '';
   }).join('');
+}
+
+function selectNa(uid) {
+  const row = document.querySelector(`tr[data-uid="${uid}"]`);
+  if (!row) return;
+  // Uncheck all radios in this row, check the NA one
+  row.querySelectorAll(`input[name="${uid}"]`).forEach(r => r.checked = false);
+  const naRadio = row.querySelector(`input[name="${uid}"][value="na"]`);
+  if (naRadio) naRadio.checked = true;
+  // Reset all button visuals
+  row.querySelectorAll('.rsb-inner').forEach(s => s.classList.remove('rsb-selected'));
+  // Highlight NA
+  const naSpan = document.getElementById(`na_span_${uid}`);
+  if (naSpan) naSpan.classList.add('rsb-selected');
+}
+
+function selectRowOption(radio, uid) {
+  const row = document.querySelector(`tr[data-uid="${uid}"]`);
+  if (!row) return;
+  // Reset all visible buttons
+  row.querySelectorAll('.rsb-inner').forEach(s => s.classList.remove('rsb-selected'));
+  // Highlight clicked
+  const lbl = radio.closest('label');
+  if (lbl) lbl.querySelector('.rsb-inner').classList.add('rsb-selected');
 }
 
 // ===== SUMMARY TAB =====
@@ -1293,6 +1493,817 @@ function buildSummaryTab(){
   <div style="text-align:center;margin-top:16px">
     <button onclick="calcSummary()" style="padding:10px 24px;background:var(--primary);color:white;border:none;border-radius:8px;font-family:Heebo,sans-serif;font-size:14px;font-weight:700;cursor:pointer">🔄 עדכן ספירת ממצאים</button>
   </div>`;
+}
+
+// ===== PDF PREVIEW BUILDER =====
+
+function getRadioSymbol(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  if (!el || el.value === 'na') return '<span class="pdf-sym pdf-sym-na">—</span>';
+  if (el.value === 'ok') return '<span class="pdf-sym pdf-sym-ok">✔</span>';
+  // any failure
+  const sevLabel = {minor:'קל', severe:'חמור', critical:'קריטי'}[el.value] || '';
+  return `<span class="pdf-sym pdf-sym-fail">✘</span><span style="font-size:9px;color:#c0392b"> ${sevLabel}</span>`;
+}
+
+function getRadioSeverityLabel(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  if (!el || el.value === 'ok' || el.value === 'na') return '';
+  const map = { critical:'🔴 קריטי', severe:'🟠 חמור', minor:'🟡 קל' };
+  return map[el.value] || '';
+}
+
+function pdfMetaRow(label, id) {
+  const el = document.getElementById(id);
+  const val = el ? (el.value || '—') : '—';
+  return `<div><span>${label}:</span> <strong>${val}</strong></div>`;
+}
+
+function buildPdfEquipImages(prefix) {
+  const grid = document.getElementById(`${prefix}_preview`);
+  if (!grid) return '';
+  const imgs = grid.querySelectorAll('img');
+  if (!imgs.length) return '';
+  return `<div class="pdf-img-grid">${Array.from(imgs).map(img =>
+    `<img src="${img.src}" alt="תמונה">`).join('')}</div>`;
+}
+
+function buildPdfFindings(prefix) {
+  const container = document.getElementById(`${prefix}_findings`);
+  if (!container) return '';
+  const cards = container.querySelectorAll('.finding-card');
+  if (!cards.length) return '';
+  let html = '';
+  cards.forEach((card, i) => {
+    const sevBtn = card.querySelector('.sev-btn.selected');
+    const sev = sevBtn ? sevBtn.dataset.sev : 'severe';
+    const sevLabel = sevBtn ? sevBtn.textContent.trim() : '🟠 חמור';
+    const inputs = card.querySelectorAll('input[type="text"]');
+    const section = inputs[0]?.value || '';
+    const action = inputs[1]?.value || '';
+    const desc = card.querySelector('textarea')?.value || '';
+    const imgs = card.querySelectorAll('img');
+    const imgHtml = imgs.length ? `<div class="pdf-finding-img">${
+      Array.from(imgs).map(img=>`<img src="${img.src}">`).join('')}</div>` : '';
+    html += `<div class="pdf-finding ${sev}">
+      <div class="pdf-finding-title">ממצא ${i+1} — ${sevLabel}</div>
+      ${desc ? `<div class="pdf-finding-desc">${desc}</div>` : ''}
+      <div class="pdf-finding-meta">${section ? `סעיף: ${section}` : ''} ${action ? `| פעולה: ${action}` : ''}</div>
+      ${imgHtml}
+    </div>`;
+  });
+  return html;
+}
+
+function buildPdfChecklistSection(sectionTitle, items, prefix) {
+  let rows = '';
+  items.forEach(item => {
+    if (!item || !item.type) return;
+    if (item.type === 'subheader') {
+      rows += `<tr class="subhdr"><td colspan="5" style="background:#dde6f0;font-weight:700;color:#1a3a5c;font-size:10px;padding:4px 7px">${item.text}</td></tr>`;
+      return;
+    }
+    if (item.type !== 'item') return;
+    const show = inspectionType === 'acceptance' ||
+      (item.insp_types||['acceptance']).includes('all') ||
+      (item.insp_types||['acceptance']).includes(inspectionType);
+    if (!show) return;
+    const uid = `${prefix}_${item.num}`;
+    const el = document.querySelector(`input[name="${uid}"]:checked`);
+    const val = el ? el.value : 'na';
+    if (val === 'na') return; // skip not-relevant rows in PDF
+    const okCell = val === 'ok'
+      ? `<span style="color:#27ae60;font-weight:700">✔</span>` : '—';
+    const failCell = val !== 'ok' && val !== 'na'
+      ? `<span style="color:#c0392b;font-weight:700">✘ ${{minor:'קל',severe:'חמור',critical:'קריטי'}[val]||''}</span>` : '—';
+    rows += `<tr>
+      <td style="width:24px;text-align:center;font-size:9px;color:#888">${item.num}</td>
+      <td style="font-size:10px">${(item.desc||'').replace(/</g,'&lt;')}</td>
+      <td style="width:60px;text-align:center;font-size:9px;color:#666">${item.std||''}</td>
+      <td style="width:70px;text-align:center">${okCell}</td>
+      <td style="width:80px;text-align:center">${failCell}</td>
+    </tr>`;
+  });
+  if (!rows) return '';
+  return `<div style="margin-bottom:12px">
+    ${sectionTitle ? `<div class="pdf-sub-title">${sectionTitle}</div>` : ''}
+    <table class="pdf-table">
+      <thead><tr>
+        <th style="width:24px">#</th>
+        <th>פריט לבדיקה</th>
+        <th style="width:60px">סעיף</th>
+        <th style="width:70px;text-align:center;color:#27ae60">✔ מתאים</th>
+        <th style="width:80px;text-align:center;color:#c0392b">✘ לא מתאים</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function buildPdfMergedChecklist(eqType, instances) {
+  // instances = [{eq, n, globalNum, prefix}]
+  // Each instance uses CHECKLIST_TEMPLATES[eq.id].
+  // For instances of SAME eq.id: item.num is identical — merge directly.
+  // For instances of DIFFERENT eq.id (cross-type merge not done here —
+  // cross-type is handled by calling buildPdfAllEquipMerged at a higher level).
+
+  // Build per-instance desc->num lookup for cross-instance uid resolution
+  function getDescMap(inst) {
+    const tmpl = CHECKLIST_TEMPLATES[inst.eq.id] || [];
+    const map = {};
+    tmpl.forEach(item => { if (item.type === 'item') map[item.desc] = item.num; });
+    return map;
+  }
+  const descMaps = instances.map(inst => getDescMap(inst));
+
+  // Master item list from first instance
+  const masterTmpl = CHECKLIST_TEMPLATES[instances[0].eq.id] || [];
+
+  // Split into sections
+  let sections = [];
+  let curSecName = null, curItems = [];
+  masterTmpl.forEach(item => {
+    if (item.type === 'section_header') {
+      if (curItems.length) sections.push({ name: curSecName, items: curItems });
+      curSecName = item.text; curItems = [];
+    } else if (item.type === 'item') {
+      curItems.push(item);
+    }
+  });
+  if (curItems.length) sections.push({ name: curSecName, items: curItems });
+
+  function buildMergedTable(sectionName, sectionItems, instGroup) {
+    let rows = '';
+    sectionItems.forEach(item => {
+      const show = inspectionType === 'acceptance' ||
+        (item.insp_types||['acceptance']).includes('all') ||
+        (item.insp_types||['acceptance']).includes(inspectionType);
+      if (!show) return;
+
+      const okNums = [], failNums = [];
+      instGroup.forEach((inst, idx) => {
+        // Find item num for this instance: same type -> same num; cross-type -> lookup by desc
+        const itemNum = descMaps[idx][item.desc] ?? item.num;
+        const uid = `${inst.prefix}_${itemNum}`;
+        const el = document.querySelector(`input[name="${uid}"]:checked`);
+        const val = el ? el.value : 'na';
+        if (val === 'ok') okNums.push(inst.globalNum);
+        else if (val !== 'na') failNums.push(inst.globalNum);
+      });
+
+      if (okNums.length === 0 && failNums.length === 0) return;
+
+      const okCell = okNums.length
+        ? `<span style="color:#27ae60;font-weight:700">${okNums.join(', ')}</span>` : '\u2014';
+      const failCell = failNums.length
+        ? `<span style="color:#c0392b;font-weight:700">${failNums.join(', ')}</span>` : '\u2014';
+
+      rows += `<tr>
+        <td style="width:24px;text-align:center;font-size:9px;color:#888">${item.num}</td>
+        <td style="font-size:10px">${(item.desc||'').replace(/</g,'&lt;')}</td>
+        <td style="width:60px;text-align:center;font-size:9px;color:#666">${item.std||''}</td>
+        <td style="width:80px;text-align:center;font-size:10px">${okCell}</td>
+        <td style="width:80px;text-align:center;font-size:10px">${failCell}</td>
+      </tr>`;
+    });
+    if (!rows) return '';
+
+    const instNums = instGroup.map(i => i.globalNum).join(', ');
+    const title = instGroup.length > 1
+      ? `${sectionName||''} \u2014 \u05de\u05ea\u05e7\u05e0\u05d9\u05dd ${instNums}`
+      : `${sectionName||''} \u2014 \u05de\u05ea\u05e7\u05df ${instGroup[0].globalNum}`;
+
+    return `
+      <div class="pdf-sub-title">${title}</div>
+      <table class="pdf-table" style="margin-bottom:8px">
+        <thead><tr>
+          <th style="width:24px">#</th>
+          <th>\u05e4\u05e8\u05d9\u05d8 \u05dc\u05d1\u05d3\u05d9\u05e7\u05d4</th>
+          <th style="width:60px">\u05e1\u05e2\u05d9\u05e3</th>
+          <th style="width:80px;text-align:center;color:#27ae60">\u2714 \u05de\u05ea\u05d0\u05d9\u05dd<br>\u05d1\u05de\u05ea\u05e7\u05e0\u05d9\u05dd</th>
+          <th style="width:80px;text-align:center;color:#c0392b">\u2718 \u05dc\u05d0 \u05de\u05ea\u05d0\u05d9\u05dd<br>\u05d1\u05de\u05ea\u05e7\u05e0\u05d9\u05dd</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  let html = '';
+  sections.forEach(sec => {
+    const t = buildMergedTable(sec.name, sec.items, instances);
+    if (t) html += t;
+  });
+  return html;
+}
+
+
+// ===== BUILD & SHOW PDF =====
+function buildPdfDocumentsReviewed() {
+  const docNames = ['בדיקה שנתית קודמת','תעודות בדיקת הולם EN 1177','הוראות יצרן / מפרט טכני','יומן תחזוקה','אישור התקנה'];
+  let rows = '';
+  for (let i = 0; i < 6; i++) {
+    const name = i < 5 ? docNames[i] : (document.getElementById('doc_name_5')?.value || '');
+    if (!name) continue;
+    const date = document.getElementById(`doc_date_${i}`)?.value || '';
+    const by   = document.getElementById(`doc_by_${i}`)?.value || '';
+    const exist = document.getElementById(`doc_exist_${i}`)?.checked;
+    const existCell = exist
+      ? `<span style="color:#27ae60;font-weight:700">✔ קיים</span>`
+      : `<span style="color:#c0392b;font-weight:700">✘ לא קיים</span>`;
+    rows += `<tr>
+      <td style="text-align:center;font-size:9px;color:#888">${i+1}</td>
+      <td style="font-size:10px">${name}</td>
+      <td style="font-size:10px;text-align:center">${date||'—'}</td>
+      <td style="font-size:10px;text-align:center">${by||'—'}</td>
+      <td style="font-size:10px;text-align:center">${existCell}</td>
+    </tr>`;
+  }
+  if (!rows) return '';
+  return `<div class="pdf-section-title">ו. מסמכים שנסקרו</div>
+  <table class="pdf-table" style="margin-bottom:10px">
+    <thead><tr>
+      <th style="width:24px">#</th>
+      <th>שם המסמך</th>
+      <th style="width:90px;text-align:center">תאריך</th>
+      <th style="width:100px;text-align:center">הוצא ע״י</th>
+      <th style="width:70px;text-align:center">קיים</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function printWithPdf() {
+  buildAndShowPdf();
+  switchTab('pdf_preview');
+  // Open print in a new clean window to avoid browser URL/date headers
+  setTimeout(() => {
+    const content = document.getElementById('content_pdf_preview');
+    if (!content) { window.print(); return; }
+    const printWin = window.open('', '_blank', 'width=900,height=700');
+    if (!printWin) { window.print(); return; }
+    // Collect all stylesheets from current page
+    const styles = Array.from(document.querySelectorAll('style')).map(s => s.outerHTML).join('\n');
+    printWin.document.write(`<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<title>דו"ח בדיקת בטיחות</title>
+${styles}
+<style>
+  @page { margin: 12mm; }
+  body { background: white; font-family: 'Heebo', sans-serif; }
+  .pdf-print-btn { display: none !important; }
+</style>
+</head>
+<body>
+${content.innerHTML}
+</body>
+</html>`);
+    printWin.document.close();
+    printWin.onload = () => {
+      printWin.focus();
+      printWin.print();
+      printWin.close();
+    };
+  }, 400);
+}
+
+function buildAndShowPdf() {
+  const container = document.getElementById('content_pdf_preview');
+  if (!container) { alert('שגיאה: לא נמצא אזור תצוגת PDF'); return; }
+
+  // Gather ALL equipment instances with globalNum
+  const eqInstances = {};
+  const allInstances = [];
+  let gcnt = 0;
+  if (selectedStds.has('new')) {
+    EQUIPMENT_TYPES.forEach(eq => {
+      const n = counts[eq.id]||0;
+      if (!n) return;
+      eqInstances[eq.id] = [];
+      for (let i=1;i<=n;i++) {
+        gcnt++;
+        const inst = { eq, n:i, globalNum:gcnt, prefix:`${eq.id}_${i}` };
+        eqInstances[eq.id].push(inst);
+        allInstances.push(inst);
+      }
+    });
+  }
+
+  // Build per-instance: map (std+idx) → item.num for reliable cross-type lookup
+  function getStdPosMap(inst) {
+    const map = {};
+    const stdCount = {};
+    (CHECKLIST_TEMPLATES[inst.eq.id]||[]).forEach(item => {
+      if (item.type !== 'item') return;
+      const key = item.std || '';
+      const idx = stdCount[key] = (stdCount[key]||0) + 1;
+      map[key + '|' + idx] = item.num;
+    });
+    return map;
+  }
+  const allStdPosMaps = allInstances.map(inst => getStdPosMap(inst));
+
+  // Build per-item std+pos key from the reference template (instance[0] of each group)
+  function getItemStdPosKey(item, refInstIdx) {
+    const tmpl = CHECKLIST_TEMPLATES[allInstances[refInstIdx].eq.id] || [];
+    const stdCount = {};
+    for (const t of tmpl) {
+      if (t.type !== 'item') continue;
+      const key = t.std || '';
+      const idx = stdCount[key] = (stdCount[key]||0) + 1;
+      if (t.num === item.num) return key + '|' + idx;
+    }
+    return null;
+  }
+
+  // Identify "common" items = desc appears in ALL instance types
+  function isCommonItem(desc) {
+    return allInstances.every((inst, idx) => allDescMaps[idx][desc] !== undefined);
+  }
+
+  // Split items into common vs type-specific for a given instance
+  // Common = section_header "בדיקות חלק 1 — כלליות" only
+  // Specific = everything else (type-shared + type-specific sections)
+  function splitItems(inst) {
+    const tmpl = CHECKLIST_TEMPLATES[inst.eq.id] || [];
+    let curSec = null;
+    let isCommonSection = false;
+    const commonSecs = [], specificSecs = [];
+    let curCommon = [], curSpecific = [];
+    function flushSection() {
+      if (curCommon.length) commonSecs.push({ name: curSec, items: curCommon });
+      if (curSpecific.length) specificSecs.push({ name: curSec, items: curSpecific });
+      curCommon = []; curSpecific = [];
+    }
+    tmpl.forEach(item => {
+      if (item.type === 'section_header') {
+        flushSection();
+        curSec = item.text;
+        isCommonSection = (item.text === 'בדיקות חלק 1 — כלליות');
+      } else if (item.type === 'item') {
+        if (isCommonSection) curCommon.push(item);
+        else curSpecific.push(item);
+      }
+    });
+    flushSection();
+    return { commonSecs, specificSecs };
+  }
+
+  // Build merged table: one row per item, ok/fail columns with equipment numbers
+  // refInstIdx = index in allInstances of the "reference" instance (whose template defines the items)
+  function buildMergedTable(sectionName, sectionItems, instGroup, refInstIdx) {
+    // build std+pos key → item.num for each item in sectionItems
+    const refTmpl = CHECKLIST_TEMPLATES[allInstances[refInstIdx].eq.id] || [];
+    const stdCount = {};
+    const itemStdPosKey = {};
+    refTmpl.forEach(t => {
+      if (t.type !== 'item') return;
+      const k = t.std || '';
+      const idx = stdCount[k] = (stdCount[k]||0) + 1;
+      itemStdPosKey[t.num] = k + '|' + idx;
+    });
+
+    let rows = '';
+    sectionItems.forEach(item => {
+      const show = inspectionType === 'acceptance' ||
+        (item.insp_types||['acceptance']).includes('all') ||
+        (item.insp_types||['acceptance']).includes(inspectionType);
+      if (!show) return;
+      const okNums = [], failNums = [];
+      const stdPosKey = itemStdPosKey[item.num];
+      instGroup.forEach(inst => {
+        const instIdx = allInstances.indexOf(inst);
+        const instItemNum = stdPosKey ? (allStdPosMaps[instIdx][stdPosKey] ?? item.num) : item.num;
+        const uid = `${inst.prefix}_${instItemNum}`;
+        const el = document.querySelector(`input[name="${uid}"]:checked`);
+        const val = el ? el.value : 'na';
+        if (val === 'ok') okNums.push(inst.globalNum);
+        else if (val !== 'na') failNums.push(inst.globalNum);
+      });
+      if (okNums.length === 0 && failNums.length === 0) return;
+      const okCell = okNums.length ? `<span style="color:#27ae60;font-weight:700">${okNums.join(', ')}</span>` : '—';
+      const failCell = failNums.length ? `<span style="color:#c0392b;font-weight:700">${failNums.join(', ')}</span>` : '—';
+      rows += `<tr>
+        <td style="width:24px;text-align:center;font-size:9px;color:#888">${item.num}</td>
+        <td style="font-size:10px">${(item.desc||'').replace(/</g,'&lt;')}</td>
+        <td style="width:60px;text-align:center;font-size:9px;color:#666">${item.std||''}</td>
+        <td style="width:80px;text-align:center;font-size:10px">${okCell}</td>
+        <td style="width:80px;text-align:center;font-size:10px">${failCell}</td>
+      </tr>`;
+    });
+    if (!rows) return '';
+    return `
+      ${sectionName ? `<div class="pdf-sub-title">${sectionName}</div>` : ''}
+      <table class="pdf-table" style="margin-bottom:8px">
+        <thead><tr>
+          <th style="width:24px">#</th><th>פריט לבדיקה</th>
+          <th style="width:60px">סעיף</th>
+          <th style="width:80px;text-align:center;color:#27ae60">✔ מתאים<br>במתקנים</th>
+          <th style="width:80px;text-align:center;color:#c0392b">✘ לא מתאים<br>במתקנים</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  // --- Build HTML ---
+  let html = `<div class="pdf-print-btn" style="display:flex;gap:8px;align-items:center">
+    <button onclick="window.print()" style="padding:10px 20px;background:#1a3a5c;color:white;border:none;border-radius:8px;font-family:Heebo,sans-serif;font-size:14px;font-weight:700;cursor:pointer">🖨️ הדפס / שמור PDF</button>
+    <button onclick="buildAndShowPdf()" style="padding:10px 16px;background:#2d5f8a;color:white;border:none;border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;font-weight:700;cursor:pointer">🔄 רענן</button>
+    <button onclick="switchTab('site')" style="padding:10px 16px;background:#5a6a7e;color:white;border:none;border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;font-weight:700;cursor:pointer">✏️ חזור לעריכה</button>
+  </div>
+  <div class="pdf-preview-wrap">`;
+
+  // Header
+  const siteName = document.getElementById('gen_site')?.value || document.getElementById('s_site_name')?.value || '';
+  const date = document.getElementById('gen_date')?.value || '';
+  const inspector = document.getElementById('gen_inspector')?.value || '';
+  const client = document.getElementById('gen_client')?.value || '';
+  const stdLabel = [...selectedStds].map(s=>s==='new'?'ת"י 1498 לאחר 2006':s==='old'?'ת"י 1498 לפני 2006':'ת"י 1497 כושר').join(' + ');
+
+  html += `<div class="pdf-doc-header">
+    <h1>דו"ח בדיקת בטיחות — ${siteName}</h1>
+    <div class="pdf-meta">
+      <div><span>תאריך:</span> <strong>${date}</strong></div>
+      <div><span>בודק:</span> <strong>${inspector}</strong></div>
+      <div><span>לקוח/רשות:</span> <strong>${client}</strong></div>
+      <div><span>תקן:</span> <strong>${stdLabel}</strong></div>
+      <div><span>סוג בדיקה:</span> <strong>${getInspLabel()}</strong></div>
+      <div><span>כתובת:</span> <strong>${document.getElementById('gen_site_addr')?.value||''}</strong></div>
+    </div>
+  </div>`;
+
+  // Site images
+  const siteImgs = document.getElementById('site_imgs_preview');
+  if (siteImgs && siteImgs.querySelectorAll('img').length) {
+    html += `<div class="pdf-section-title">תמונות האתר</div>
+    <div class="pdf-img-grid">${Array.from(siteImgs.querySelectorAll('img')).map(img=>`<img src="${img.src}">`).join('')}</div>`;
+  }
+
+  // ===== נוכחים בזמן הבדיקה =====
+  const attendees = [1,2,3].map(i => ({
+    name: document.getElementById(`att_name_${i}`)?.value || '',
+    role: document.getElementById(`att_role_${i}`)?.value || '',
+    sign: document.getElementById(`att_sign_${i}`)?.value || '',
+  })).filter(a => a.name || a.role);
+
+  html += `<div class="pdf-section-title">נוכחים בזמן הבדיקה</div>`;
+  if (attendees.length) {
+    html += `<table class="pdf-table" style="margin-bottom:10px">
+      <thead><tr><th>שם</th><th>תפקיד</th><th>חתימה</th></tr></thead>
+      <tbody>${attendees.map(a=>`<tr><td>${a.name||'—'}</td><td>${a.role||'—'}</td><td>${a.sign||''}</td></tr>`).join('')}</tbody>
+    </table>`;
+  } else {
+    html += `<div style="border:1px solid #eee;border-radius:5px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#666">לא היו נוכחים נוספים בבדיקה</div>`;
+  }
+
+  // ===== א. Site checks (new std only) =====
+
+  // Helper: build equipment detail block (shared by all std types)
+  function buildEqDetailBlock(inst, stdLabel, headerColor) {
+    const p = inst.prefix;
+    const name = document.getElementById(`${p}_name`)?.value || '';
+    const loc = document.getElementById(`${p}_loc`)?.value || '';
+    const year = document.getElementById(`${p}_year`)?.value || '';
+    const mfr = document.getElementById(`${p}_mfr`)?.value || '';
+    const desc = document.getElementById(`${p}_desc`)?.value || '';
+    const cond = document.querySelector(`input[name="${p}_cond"]:checked`)?.value || '';
+    const imgsHtml = buildPdfEquipImages(p);
+    return `<div class="pdf-eq-block" style="margin-bottom:10px">
+      <div class="pdf-eq-header" style="background:${headerColor||'#1a3a5c'}">
+        <span>${inst.eq.letter}</span> ${inst.eq.label} — מתקן מס׳ ${inst.globalNum}
+        <span style="font-size:10px;opacity:0.8;margin-right:8px">(${stdLabel})</span>
+      </div>
+      <div class="pdf-eq-details">
+        <div class="pdf-eq-detail-item"><span>שם/סוג</span><strong>${name||'—'}</strong></div>
+        <div class="pdf-eq-detail-item"><span>מיקום</span><strong>${loc||'—'}</strong></div>
+        <div class="pdf-eq-detail-item"><span>שנת ייצור</span><strong>${year||'—'}</strong></div>
+        <div class="pdf-eq-detail-item"><span>יצרן</span><strong>${mfr||'—'}</strong></div>
+        <div class="pdf-eq-detail-item"><span>מצב כללי</span><strong>${cond||'—'}</strong></div>
+        ${desc ? `<div class="pdf-eq-detail-item" style="grid-column:1/-1"><span>תיאור</span><strong>${desc}</strong></div>` : ''}
+      </div>
+      ${imgsHtml}
+    </div>`;
+  }
+
+  // Helper: build merged PDF table for a group of instances + checklist
+  // sectionItems = array of {type:'item', num, topic, subtopic, chapter, section, std_ref}
+  // Returns html string or '' if nothing to show
+  function buildOldFitMergedTable(sectionName, sectionItems, instGroup, isOld) {
+    let rows = '';
+    sectionItems.forEach(item => {
+      const okNums = [], minorNums = [], severeNums = [], criticalNums = [];
+      instGroup.forEach(inst => {
+        const uid = `${inst.prefix}_${item.num}`;
+        const el = document.querySelector(`input[name="${uid}"]:checked`);
+        const val = el ? el.value : 'na';
+        if (val === 'ok') okNums.push(inst.globalNum);
+        else if (val === 'minor') minorNums.push(inst.globalNum);
+        else if (val === 'severe') severeNums.push(inst.globalNum);
+        else if (val === 'critical') criticalNums.push(inst.globalNum);
+      });
+      const hasAny = okNums.length || minorNums.length || severeNums.length || criticalNums.length;
+      if (!hasAny) return;
+
+      const desc = isOld
+        ? `<strong>${item.topic}</strong>${item.subtopic ? ' — '+item.subtopic : ''}`
+        : `<strong>${item.topic}</strong>${item.subtopic ? ' — '+item.subtopic : ''}`;
+      const sec = isOld
+        ? (item.chapter ? `חלק ${item.chapter} §${item.section}` : '')
+        : (item.std_ref || '');
+
+      const okCell = okNums.length ? `<span style="color:#27ae60;font-weight:700">${okNums.join(', ')}</span>` : '—';
+      // Fail cell: show numbers colored by worst severity (no labels)
+      const allFailNums = [...criticalNums.map(n=>({n,c:'#c0392b'})), ...severeNums.map(n=>({n,c:'#e67e22'})), ...minorNums.map(n=>({n,c:'#b8860b'}))];
+      const failCell = allFailNums.length
+        ? allFailNums.map(({n,c})=>`<span style="color:${c};font-weight:700">${n}</span>`).join(', ')
+        : '—';
+
+      rows += `<tr>
+        <td style="width:24px;text-align:center;font-size:9px;color:#888">${item.num}</td>
+        <td style="font-size:10px">${desc}</td>
+        <td style="width:70px;text-align:center;font-size:9px;color:#666">${sec}</td>
+        <td style="width:80px;text-align:center;font-size:10px">${okCell}</td>
+        <td style="width:80px;text-align:center;font-size:10px">${failCell}</td>
+      </tr>`;
+    });
+    if (!rows) return '';
+    return `
+      ${sectionName ? `<div class="pdf-sub-title">${sectionName}</div>` : ''}
+      <table class="pdf-table" style="margin-bottom:8px">
+        <thead><tr>
+          <th style="width:24px">#</th>
+          <th>פריט לבדיקה</th>
+          <th style="width:70px">סעיף</th>
+          <th style="width:80px;text-align:center;color:#27ae60">✔ מתאים<br>במתקנים</th>
+          <th style="width:80px;text-align:center;color:#c0392b">✘ לא מתאים<br>במתקנים</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  // Helper: split old checklist into common (א–יז) and specific (א1, א2...) items
+  function splitOldChecklist(checklist) {
+    const COMMON_NUMS = new Set(['א','ב','ג','ד','ה','ו','ז','ח','ט','י','יא','יב','יג','יד','טו','טז','יז']);
+    const commonItems = [], specificItems = [];
+    checklist.forEach(item => {
+      if (item.type !== 'item') return;
+      if (COMMON_NUMS.has(item.num)) commonItems.push(item);
+      else specificItems.push(item);
+    });
+    return { commonItems, specificItems };
+  }
+
+  // Helper: split fitness checklist into sections (by subheader)
+  function getFitSections(checklist) {
+    let sections = [], curName = null, curItems = [];
+    checklist.forEach(item => {
+      if (item.type === 'subheader') {
+        if (curItems.length) sections.push({ name: curName, items: curItems });
+        curName = item.text; curItems = [];
+      } else if (item.type === 'item') {
+        curItems.push(item);
+      }
+    });
+    if (curItems.length) sections.push({ name: curName, items: curItems });
+    return sections;
+  }
+
+  // ===== OLD standard instances =====
+  const oldInstances = [];
+  const oldEqInstances = {};
+  if (selectedStds.has('old')) {
+    OLD_EQUIPMENT_TYPES.forEach(eq => {
+      const n = counts[eq.id]||0;
+      if (!n) return;
+      oldEqInstances[eq.id] = [];
+      for (let i=1;i<=n;i++) {
+        gcnt++;
+        const inst = { eq, n:i, globalNum:gcnt, prefix:`old_${eq.id}_${i}` };
+        oldEqInstances[eq.id].push(inst);
+        oldInstances.push(inst);
+      }
+    });
+  }
+
+  // ===== FITNESS instances =====
+  const fitInstances = [];
+  if (selectedStds.has('fitness')) {
+    FITNESS_EQUIPMENT_TYPES.forEach(eq => {
+      const n = counts[eq.id]||0;
+      if (!n) return;
+      for (let i=1;i<=n;i++) {
+        gcnt++;
+        const inst = { eq, n:i, globalNum:gcnt, prefix:`${eq.id}_${i}` };
+        fitInstances.push(inst);
+      }
+    });
+  }
+
+  // ===== א. Site checks (new std only) =====
+  if (selectedStds.has('new')) {
+    html += `<div class="pdf-section-title">א. בדיקות האתר — ת"י 1498 לאחר 2006</div>`;
+    html += buildPdfChecklistSection('', SITE_CHECKS, 'site');
+  }
+
+  // ===== ב. Equipment details =====
+  const hasAnyEquip = allInstances.length || oldInstances.length || fitInstances.length;
+  if (hasAnyEquip) {
+    html += `<div class="pdf-section-title">ב. פרטי מתקנים ותמונות</div>`;
+
+    if (allInstances.length) {
+      if (oldInstances.length || fitInstances.length)
+        html += `<div class="pdf-sub-title" style="background:#e8f4fd;border-radius:4px;padding:4px 8px;margin-bottom:6px">ב.1 — ת"י 1498 לאחר 2006</div>`;
+      allInstances.forEach(inst => { html += buildEqDetailBlock(inst, 'ת"י 1498 לאחר 2006', '#1a3a5c'); });
+    }
+    if (oldInstances.length) {
+      html += `<div class="pdf-sub-title" style="background:#fdf6e8;border-radius:4px;padding:4px 8px;margin-bottom:6px">${allInstances.length?'ב.2 — ':''}ת"י 1498 לפני 2006</div>`;
+      oldInstances.forEach(inst => { html += buildEqDetailBlock(inst, 'ת"י 1498 לפני 2006', '#5a3800'); });
+    }
+    if (fitInstances.length) {
+      html += `<div class="pdf-sub-title" style="background:#eafaf1;border-radius:4px;padding:4px 8px;margin-bottom:6px">${(allInstances.length||oldInstances.length)?'ב.'+(1+(allInstances.length>0?1:0)+(oldInstances.length>0?1:0))+' — ':''}ת"י 1497 כושר</div>`;
+      fitInstances.forEach(inst => { html += buildEqDetailBlock(inst, 'ת"י 1497 כושר', '#1a5c3a'); });
+    }
+  }
+
+  // ===== ג. Checklist results =====
+  if (hasAnyEquip) {
+    html += `<div class="pdf-section-title">ג. בדיקות מתקנים</div>`;
+
+    // ג.1 New standard
+    if (allInstances.length) {
+      if (oldInstances.length || fitInstances.length)
+        html += `<div class="pdf-sub-title">ג.1 — ת"י 1498 לאחר 2006</div>`;
+      const { commonSecs } = splitItems(allInstances[0]);
+      if (commonSecs.length) {
+        html += `<div class="pdf-eq-block"><div class="pdf-eq-header" style="background:#2d5f8a">📋 בדיקות כלליות — כל המתקנים (${allInstances.map(i=>i.globalNum).join(', ')})</div><div style="padding:8px 10px">`;
+        commonSecs.forEach(sec => { const t=buildMergedTable(sec.name,sec.items,allInstances,0); if(t)html+=t; });
+        html += `</div></div>`;
+      }
+      Object.entries(eqInstances).forEach(([eqId, instances]) => {
+        const eq = instances[0].eq;
+        const refInstIdx = allInstances.indexOf(instances[0]);
+        const { specificSecs } = splitItems(instances[0]);
+        if (!specificSecs.length) return;
+        html += `<div class="pdf-eq-block"><div class="pdf-eq-header"><span>${eq.letter}</span> ${eq.label} — בדיקות ספציפיות${instances.length>1?` (מתקנים ${instances.map(i=>i.globalNum).join(', ')})`:` — מתקן ${instances[0].globalNum}`}</div><div style="padding:8px 10px">`;
+        specificSecs.forEach(sec => { const t=buildMergedTable(sec.name,sec.items,instances,refInstIdx); if(t)html+=t; });
+        html += `</div></div>`;
+      });
+    }
+
+    // ג.2 Old standard — common block first, then specific per type
+    if (oldInstances.length) {
+      html += `<div class="pdf-sub-title">ג.${allInstances.length?'2':'1'} — ת"י 1498 לפני 2006</div>`;
+
+      // COMMON items (א–יז) — all old instances together
+      const firstOldChecklist = OLD_STD_CHECKLISTS[oldInstances[0].eq.id] || [];
+      const { commonItems } = splitOldChecklist(firstOldChecklist);
+      if (commonItems.length) {
+        const instNums = oldInstances.map(i=>i.globalNum).join(', ');
+        const t = buildOldFitMergedTable('', commonItems, oldInstances, true);
+        if (t) {
+          html += `<div class="pdf-eq-block">
+            <div class="pdf-eq-header" style="background:#7a4f00">
+              📋 בדיקות כלליות — כל המתקנים (${instNums})
+            </div>
+            <div style="padding:8px 10px">${t}</div>
+          </div>`;
+        }
+      }
+
+      // SPECIFIC items (א1, א2...) — grouped by eq type
+      const oldByType = {};
+      oldInstances.forEach(inst => {
+        if (!oldByType[inst.eq.id]) oldByType[inst.eq.id] = [];
+        oldByType[inst.eq.id].push(inst);
+      });
+      Object.entries(oldByType).forEach(([eqId, instGroup]) => {
+        const eq = instGroup[0].eq;
+        const checklist = OLD_STD_CHECKLISTS[eqId] || [];
+        const { specificItems } = splitOldChecklist(checklist);
+        if (!specificItems.length) return;
+        const instNums = instGroup.map(i=>i.globalNum).join(', ');
+        const t = buildOldFitMergedTable('בדיקות ספציפיות לסוג', specificItems, instGroup, true);
+        if (t) {
+          html += `<div class="pdf-eq-block" style="margin-bottom:10px">
+            <div class="pdf-eq-header" style="background:#5a3800">
+              <span>${eq.letter}</span> ${eq.label} — בדיקות ספציפיות
+              ${instGroup.length > 1 ? ` (מתקנים ${instNums})` : ` — מתקן ${instGroup[0].globalNum}`}
+            </div>
+            <div style="padding:8px 10px">${t}</div>
+          </div>`;
+        }
+      });
+    }
+
+    // ג.3 Fitness — sections merged across all fit instances of same type
+    if (fitInstances.length) {
+      const gNum = (allInstances.length?1:0)+(oldInstances.length?1:0)+1;
+      html += `<div class="pdf-sub-title">ג.${gNum} — ת"י 1497 כושר</div>`;
+
+      // All fitness instances together — one common merged block (all share same checklist)
+      const fitSections = getFitSections(FITNESS_CHECKLIST_1497);
+      const instNums = fitInstances.map(i=>i.globalNum).join(', ');
+
+      // First: all-instances common block
+      html += `<div class="pdf-eq-block">
+        <div class="pdf-eq-header" style="background:#1a7a4a">
+          📋 בדיקות כושר — כל המתקנים (${instNums})
+        </div><div style="padding:8px 10px">`;
+      fitSections.forEach(sec => {
+        const t = buildOldFitMergedTable(sec.name, sec.items, fitInstances, false);
+        if (t) html += t;
+      });
+      html += `</div></div>`;
+    }
+  }
+
+  // ===== ד. Findings =====
+  const allEquip = [...allInstances, ...oldInstances, ...fitInstances];
+  const allFindings = allEquip.map(inst => ({inst, fHtml: buildPdfFindings(inst.prefix)})).filter(x=>x.fHtml);
+  if (allFindings.length) {
+    html += `<div class="pdf-section-title">ד. ממצאים</div>`;
+
+    // ד.1 New
+    const newFindings = allFindings.filter(x => allInstances.includes(x.inst));
+    if (newFindings.length) {
+      if (oldInstances.length || fitInstances.length)
+        html += `<div class="pdf-sub-title">ד.1 — ת"י 1498 לאחר 2006</div>`;
+      newFindings.forEach(({inst, fHtml}) => {
+        html += `<div class="pdf-eq-block" style="margin-bottom:10px">
+          <div class="pdf-eq-header"><span>${inst.eq.letter}</span> ${inst.eq.label} — מתקן מס׳ ${inst.globalNum} — ממצאים</div>
+          <div style="padding:8px 10px">${fHtml}</div>
+        </div>`;
+      });
+    }
+
+    // ד.2 Old
+    const oldFindings = allFindings.filter(x => oldInstances.includes(x.inst));
+    if (oldFindings.length) {
+      const dNum = (newFindings.length?2:1);
+      html += `<div class="pdf-sub-title">ד.${dNum} — ת"י 1498 לפני 2006</div>`;
+      oldFindings.forEach(({inst, fHtml}) => {
+        html += `<div class="pdf-eq-block" style="margin-bottom:10px">
+          <div class="pdf-eq-header" style="background:#5a3800"><span>${inst.eq.letter}</span> ${inst.eq.label} — מתקן מס׳ ${inst.globalNum} — ממצאים</div>
+          <div style="padding:8px 10px">${fHtml}</div>
+        </div>`;
+      });
+    }
+
+    // ד.3 Fitness
+    const fitFindings = allFindings.filter(x => fitInstances.includes(x.inst));
+    if (fitFindings.length) {
+      const dNum = (newFindings.length?1:0)+(oldFindings.length?1:0)+1;
+      html += `<div class="pdf-sub-title">ד.${dNum} — ת"י 1497 כושר</div>`;
+      fitFindings.forEach(({inst, fHtml}) => {
+        html += `<div class="pdf-eq-block" style="margin-bottom:10px">
+          <div class="pdf-eq-header" style="background:#1a5c3a">💪 ${inst.eq.label} — מתקן מס׳ ${inst.globalNum} — ממצאים</div>
+          <div style="padding:8px 10px">${fHtml}</div>
+        </div>`;
+      });
+    }
+  }
+
+  // ה. Maintenance
+  if (selectedStds.has('new')) {
+    html += `<div class="pdf-section-title">ה. תחזוקה ותיעוד</div>`;
+    html += buildPdfChecklistSection('', MAINT_CHECKS, 'maint');
+  }
+
+  // ו. Documents reviewed
+  html += buildPdfDocumentsReviewed();
+
+  // Summary
+  calcSummary();
+  const critical = document.getElementById('sum_critical')?.textContent || '—';
+  const severe = document.getElementById('sum_severe')?.textContent || '—';
+  const minor = document.getElementById('sum_minor')?.textContent || '—';
+  const conclusion = document.querySelector('input[name="conclusion"]:checked');
+  const conclusionText = conclusion ? conclusion.nextElementSibling?.textContent || '' : '—';
+  const notes = document.getElementById('summary_notes')?.value || '';
+  const sigName = document.getElementById('sig_name')?.value || '';
+  const sigDate = document.getElementById('sig_date')?.value || '';
+  const sigCert = document.getElementById('sig_cert')?.value || '';
+
+  html += `<div class="pdf-section-title">סיכום</div>
+  <table class="pdf-table" style="margin-bottom:10px">
+    <thead><tr><th>🔴 קריטיים</th><th>🟠 חמורים</th><th>🟡 קלים</th></tr></thead>
+    <tbody><tr>
+      <td style="text-align:center;font-size:16px;font-weight:800;color:#c0392b">${critical}</td>
+      <td style="text-align:center;font-size:16px;font-weight:800;color:#e67e22">${severe}</td>
+      <td style="text-align:center;font-size:16px;font-weight:800;color:#b8860b">${minor}</td>
+    </tr></tbody>
+  </table>
+  <div style="border:1px solid #bbb;border-radius:5px;padding:8px 12px;margin-bottom:10px;font-size:12px">
+    <strong>מסקנה:</strong> ${conclusionText}
+  </div>
+  ${notes ? `<div style="border:1px solid #eee;border-radius:5px;padding:8px;margin-bottom:10px;font-size:11px;color:#333"><strong>הערות מסכמות:</strong><br>${notes}</div>` : ''}
+  <div style="border:1px solid #bbb;border-radius:5px;padding:8px 12px;margin-top:10px">
+    <strong>חתימת הבודק:</strong> ${sigName} &nbsp;|&nbsp; מס׳ תעודה: ${sigCert} &nbsp;|&nbsp; תאריך: ${sigDate}
+    <div style="margin-top:20px;border-top:1px solid #bbb;padding-top:4px;font-size:10px;color:#888;text-align:center">חתימה</div>
+  </div>`;
+
+  html += `</div>`;
+  container.innerHTML = html;
 }
 
 // ===== HELPERS =====
@@ -1369,11 +2380,256 @@ function calcSummary(){
   if(sc)sc.textContent=c; if(ss)ss.textContent=s; if(sm)sm.textContent=m;
 }
 
+// ===== DRAFT SAVE / LOAD =====
+
+function collectFormData() {
+  const data = {
+    version: 'v11',
+    savedAt: new Date().toISOString(),
+    setup: {
+      stds: [...selectedStds],
+      inspectionType,
+      counts: {...counts},
+      fields: {}
+    },
+    form: {}
+  };
+
+  // Collect all setup fields
+  ['s_date','s_time_start','s_inspector_name','s_inspector_id',
+   's_client_name','s_site_address','s_site_name','s_weather'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) data.setup.fields[id] = el.value;
+  });
+
+  // Collect all text inputs and textareas in the form
+  document.querySelectorAll('#tabs-content input[type="text"], #tabs-content input[type="date"], #tabs-content input[type="time"], #tabs-content textarea').forEach(el => {
+    if (el.id) data.form[el.id] = el.value;
+  });
+
+  // Collect all radio buttons (checked values)
+  const radioGroups = {};
+  document.querySelectorAll('#tabs-content input[type="radio"]:checked').forEach(el => {
+    if (el.name) radioGroups[el.name] = el.value;
+  });
+  data.form._radios = radioGroups;
+
+  // Collect checkboxes
+  const checkboxes = {};
+  document.querySelectorAll('#tabs-content input[type="checkbox"]').forEach(el => {
+    if (el.id) checkboxes[el.id] = el.checked;
+  });
+  data.form._checkboxes = checkboxes;
+
+  // Collect conclusion radio
+  const conc = document.querySelector('input[name="conclusion"]:checked');
+  if (conc) data.form._conclusion = conc.id;
+
+  return data;
+}
+
+function saveDraft() {
+  try {
+    const data = collectFormData();
+    const siteName = document.getElementById('s_site_name')?.value || 'בדיקה';
+    const date = document.getElementById('s_date')?.value || new Date().toISOString().split('T')[0];
+    const filename = `טיוטה_${siteName}_${date}.json`.replace(/\s+/g,'_');
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+    showToast('✅ טיוטה נשמרה בהצלחה');
+  } catch(e) {
+    showToast('❌ שגיאה בשמירה: ' + e.message);
+  }
+}
+
+function loadDraft(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.version || !data.setup) { showToast('❌ קובץ לא תקין'); return; }
+      applyDraftData(data);
+      showToast('✅ הטיוטה נטענה בהצלחה');
+    } catch(err) {
+      showToast('❌ שגיאה בטעינה: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function applyDraftData(data) {
+  // Restore setup fields
+  if (data.setup.fields) {
+    Object.entries(data.setup.fields).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    });
+  }
+
+  // Restore inspection type
+  if (data.setup.inspectionType) {
+    inspectionType = data.setup.inspectionType;
+    document.querySelectorAll('.insp-type-btn').forEach(btn => {
+      btn.classList.toggle('selected', btn.textContent.trim() === ({
+        annual:'שנתית', monthly:'חודשית', incident:'לאחר תקלה/תאונה', acceptance:'בדיקת קבלה'
+      }[inspectionType]));
+    });
+  }
+
+  // Restore standards selection
+  if (data.setup.stds) {
+    ['std_new','std_old','std_fitness'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.checked = false;
+    });
+    data.setup.stds.forEach(std => {
+      const el = document.getElementById(`std_${std}`);
+      if (el) el.checked = true;
+    });
+    onStdChange();
+  }
+
+  // Restore counts
+  if (data.setup.counts) {
+    Object.entries(data.setup.counts).forEach(([id, val]) => {
+      counts[id] = val;
+      ['','new_','old_','fit_'].forEach(p => {
+        const countEl = document.getElementById('count_' + p + id);
+        const optEl = document.getElementById('eqopt_' + p + id);
+        if (countEl) countEl.textContent = val;
+        if (optEl) optEl.classList.toggle('active', val > 0);
+      });
+    });
+  }
+
+  // Generate form with restored settings
+  generateForm();
+
+  // Now restore form values after a tick (DOM needs to build first)
+  setTimeout(() => {
+    if (data.form) {
+      // Text/date/textarea fields
+      Object.entries(data.form).forEach(([id, val]) => {
+        if (id.startsWith('_')) return;
+        const el = document.getElementById(id);
+        if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) el.value = val;
+      });
+
+      // Radio buttons
+      if (data.form._radios) {
+        Object.entries(data.form._radios).forEach(([name, val]) => {
+          const el = document.querySelector(`input[name="${name}"][value="${val}"]`);
+          if (el) {
+            el.checked = true;
+            // Trigger visual update
+            if (val === 'na') selectNa(name);
+            else selectRowOption(el, name);
+          }
+        });
+      }
+
+      // Checkboxes
+      if (data.form._checkboxes) {
+        Object.entries(data.form._checkboxes).forEach(([id, checked]) => {
+          const el = document.getElementById(id);
+          if (el) el.checked = checked;
+        });
+      }
+
+      // Conclusion
+      if (data.form._conclusion) {
+        const el = document.getElementById(data.form._conclusion);
+        if (el) el.checked = true;
+      }
+
+      calcSummary();
+    }
+  }, 300);
+}
+
+// Auto-save to localStorage every 60 seconds
+let autoSaveInterval = null;
+
+function startAutoSave() {
+  if (autoSaveInterval) clearInterval(autoSaveInterval);
+  autoSaveInterval = setInterval(() => {
+    try {
+      const data = collectFormData();
+      localStorage.setItem('inspection_autosave', JSON.stringify(data));
+      localStorage.setItem('inspection_autosave_time', new Date().toLocaleTimeString('he-IL'));
+      updateAutoSaveIndicator();
+    } catch(e) { /* localStorage full or unavailable */ }
+  }, 60000); // every 60 seconds
+}
+
+function updateAutoSaveIndicator() {
+  const time = localStorage.getItem('inspection_autosave_time');
+  const el = document.getElementById('autosave-indicator');
+  if (el && time) el.textContent = `💾 נשמר אוטומטית ב-${time}`;
+}
+
+// Toast notification
+function showToast(msg) {
+  let toast = document.getElementById('draft-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'draft-toast';
+    toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a3a5c;color:white;padding:12px 20px;border-radius:8px;font-family:Heebo,sans-serif;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:opacity 0.3s;direction:rtl';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+}
+
+// Check for autosave on page load
+function checkAutoSave() {
+  try {
+    const saved = localStorage.getItem('inspection_autosave');
+    const time = localStorage.getItem('inspection_autosave_time');
+    if (!saved) return;
+    const data = JSON.parse(saved);
+    if (!data.version) return;
+    const siteName = data.setup?.fields?.s_site_name || '';
+    const date = data.setup?.fields?.s_date || '';
+    if (confirm(`נמצאה טיוטה שמורה${siteName ? ' עבור: ' + siteName : ''}${date ? ' מתאריך ' + date : ''}\n(נשמרה ב-${time||'?'})\n\nלטעון אותה?`)) {
+      applyDraftData(data);
+    }
+  } catch(e) { /* ignore */ }
+}
+
+// Override generateForm to start autosave and show indicator
+const _origGenerateForm = generateForm;
+generateForm = function() {
+  _origGenerateForm();
+  startAutoSave();
+  // Add autosave indicator to topbar
+  setTimeout(() => {
+    const topbar = document.querySelector('.form-topbar h1');
+    if (topbar && !document.getElementById('autosave-indicator')) {
+      const ind = document.createElement('span');
+      ind.id = 'autosave-indicator';
+      ind.style.cssText = 'font-size:10px;opacity:0.6;margin-right:10px;font-weight:400';
+      topbar.parentNode.insertBefore(ind, topbar.nextSibling);
+      updateAutoSaveIndicator();
+    }
+  }, 100);
+};
+
 // Init
 document.getElementById('s_date').value=new Date().toISOString().split('T')[0];
-// Default: select ת"י 1498 לאחר 2006
 document.getElementById('std_new').checked = true;
 onStdChange();
+
+// Check for autosave after short delay
+setTimeout(checkAutoSave, 500);
 </script>
 </body>
 </html>
